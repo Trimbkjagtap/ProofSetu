@@ -1,7 +1,11 @@
 # Demo Script (draft — finalize after 1:00 AM feature freeze)
 
 Target: ~3 minutes. Run in a fresh/incognito session against the deployed
-`develop` URLs. Wake the Render backend (`/health`) 2–3 minutes before.
+`develop` URLs. **Wake the Render backend 2–3 min before** by opening
+https://proofsetu.onrender.com/health (free tier sleeps when idle).
+
+- Backend (live): https://proofsetu.onrender.com
+- Frontend (Vercel): _TBD (Member 1)_
 
 ## Acceptance demo beats (what the judge sees)
 1. **Upload + source evidence** — upload a synthetic pay stub; show field-level
