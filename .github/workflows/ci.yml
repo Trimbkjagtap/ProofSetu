@@ -1,0 +1,53 @@
+name: CI
+
+# Lightweight checks on PRs into develop (and pushes to develop).
+# main is protected and untouched during the hackathon.
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+jobs:
+  backend:
+    name: Backend (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend deps
+        run: |
+          if [ -f backend/requirements.txt ]; then
+            python -m pip install --upgrade pip
+            pip install -r backend/requirements.txt
+          else
+            echo "No backend/requirements.txt yet — skipping install."
+          fi
+      - name: Run backend tests
+        run: |
+          if ls tests/*.py backend/**/tests/*.py >/dev/null 2>&1 || [ -d tests ]; then
+            pip install pytest
+            pytest -q || exit 1
+          else
+            echo "No tests yet — skipping."
+          fi
+
+  frontend:
+    name: Frontend (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install and test frontend
+        run: |
+          if [ -f frontend/package.json ]; then
+            cd frontend
+            npm ci || npm install
+            npm test --if-present
+          else
+            echo "No frontend/package.json yet — skipping."
+          fi

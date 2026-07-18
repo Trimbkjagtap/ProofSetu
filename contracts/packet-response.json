@@ -1,0 +1,7 @@
+{
+  "packetId": "packet_001",
+  "status": "ready_for_preview",
+  "includedDocuments": ["pay_stub", "government_id"],
+  "confirmedFieldsOnly": true,
+  "downloadUrl": "/packet/packet_001/pdf"
+}

@@ -1,0 +1,14 @@
+{
+  "documentId": "doc_001",
+  "documentType": "pay_stub",
+  "status": "needs_confirmation",
+  "fields": [
+    {
+      "name": "gross_pay",
+      "value": 2450,
+      "confidence": 0.82,
+      "state": "unconfirmed",
+      "sourceBox": { "page": 1, "x": 410, "y": 520, "width": 150, "height": 35 }
+    }
+  ]
+}
