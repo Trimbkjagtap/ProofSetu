@@ -1,0 +1,10 @@
+# RealDoor backend (FastAPI) — Member 4 owns this file.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+python-multipart>=0.0.9
+fpdf2>=2.7
+
+# --- dev / test ---
+pytest>=8.0
+httpx>=0.27
