@@ -36,12 +36,17 @@ logger = logging.getLogger("extraction")
 
 
 class ExtractionService:
-    def __init__(self, ocr_provider_name: str | None = None) -> None:
+    def __init__(self, ocr_provider_name: str | None = None, ocr_provider=None) -> None:
         self._ocr_provider_name = ocr_provider_name or os.getenv("OCR_PROVIDER", "fixture")
+        # Optional injected provider (used by tests to exercise the OCR path
+        # without the Tesseract binary). Overrides OCR_PROVIDER when set.
+        self._ocr_provider_override = ocr_provider
         # In-memory doc store for the dev/integration PATCH flow. Session-scoped
         # persistence is Member 4's store adapter; this is a local fallback only.
         self._docs: Dict[str, ExtractionResponse] = {}
         self._stale: Dict[str, bool] = {}
+        # Content-free safety events (no document text ever stored here).
+        self._safety_events: list[dict] = []
 
     # -- POST /documents -------------------------------------------------
     def extract(
@@ -50,7 +55,7 @@ class ExtractionService:
         validate_upload(filename, content_type, content)
 
         document_id = f"doc_{uuid.uuid4().hex[:8]}"
-        provider = get_ocr_provider(self._ocr_provider_name)
+        provider = self._ocr_provider_override or get_ocr_provider(self._ocr_provider_name)
 
         if provider is None:
             response = self._extract_via_fixture(filename, document_id)
@@ -75,13 +80,23 @@ class ExtractionService:
     ) -> ExtractionResponse:
         ocr = provider.extract_words(content, content_type or "")
 
-        # Input guard: text is untrusted data. Record a content-free event only.
+        # Input guard: text is untrusted data. Record a content-free event only;
+        # the offending text is never logged or stored. Behavior does not change.
         if detect_injection(ocr.text):
-            logger.warning("prompt_injection_detected doc=%s (ignored)", document_id)
+            self._record_safety_event(document_id, "prompt_injection")
 
         doc_type = classify(filename, ocr.text)
         fields = map_fields(doc_type, ocr)
         fields = filter_to_allowlist(doc_type, fields)  # defense in depth
+
+        # Defense in depth: never let injection-like text ride out as a
+        # confirmable value. Flag it for the renter instead of trusting it.
+        for f in fields:
+            if isinstance(f.value, str) and detect_injection(f.value):
+                f.value = None
+                f.state = FieldState.please_check
+                self._record_safety_event(document_id, "suspicious_field_value")
+
         return ExtractionResponse(
             document_id=document_id,
             document_type=doc_type,
@@ -118,6 +133,22 @@ class ExtractionService:
 
     def get_document(self, document_id: str) -> ExtractionResponse | None:
         return self._docs.get(document_id)
+
+    # -- content-free safety events --------------------------------------
+    def _record_safety_event(self, document_id: str, event_type: str) -> None:
+        # Store ONLY the document id and event type — never the offending text.
+        self._safety_events.append({"documentId": document_id, "type": event_type})
+        logger.warning("safety_event type=%s doc=%s", event_type, document_id)
+
+    def safety_events(self) -> list[dict]:
+        """Content-free safety events for the audit trail (no document text)."""
+        return list(self._safety_events)
+
+    def injection_detected(self, document_id: str) -> bool:
+        return any(
+            e["documentId"] == document_id and e["type"] == "prompt_injection"
+            for e in self._safety_events
+        )
 
 
 # Module-level singleton for the router/dev app.
