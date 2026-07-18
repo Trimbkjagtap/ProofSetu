@@ -1,8 +1,8 @@
 """Pick the session store implementation based on configuration."""
-from config import settings
-from store.base import SessionStore
-from store.memory import MemoryStore
-from store.upstash import UpstashStore
+from backend.config import settings
+from backend.store.base import SessionStore
+from backend.store.memory import MemoryStore
+from backend.store.upstash import UpstashStore
 
 
 def get_store() -> SessionStore:

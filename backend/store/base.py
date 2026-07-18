@@ -7,7 +7,7 @@ pattern: swap the implementation, keep the interface.
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from models.session import Session
+from backend.models.session import Session
 
 
 class SessionStore(ABC):

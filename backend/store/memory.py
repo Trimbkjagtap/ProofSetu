@@ -8,8 +8,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 
-from models.session import Session
-from store.base import SessionStore
+from backend.models.session import Session
+from backend.store.base import SessionStore
 
 
 def _now() -> datetime:

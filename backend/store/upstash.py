@@ -7,8 +7,8 @@ UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN.
 """
 from typing import Optional
 
-from models.session import Session
-from store.base import SessionStore
+from backend.models.session import Session
+from backend.store.base import SessionStore
 
 _NOT_READY = "UpstashStore is not implemented yet; use SESSION_BACKEND=memory."
 
