@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" width="240" height="150" role="img" aria-label="A document being filed away and marked with a checkmark">
+  <style>
+    .doc { animation: dropdoc 3s ease-in-out infinite; }
+    .chk { animation: popcheck 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    @keyframes dropdoc {
+      0%   { transform: translateY(-26px); opacity: 0; }
+      18%  { opacity: 1; }
+      40%  { transform: translateY(0); }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes popcheck {
+      0%, 46% { opacity: 0; transform: scale(0.6); }
+      60%     { opacity: 1; transform: scale(1.08); }
+      72%,100%{ opacity: 1; transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .doc { animation: none; transform: none; opacity: 1; }
+      .chk { animation: none; opacity: 1; transform: none; }
+    }
+  </style>
+
+  <!-- Folder back + tab -->
+  <path d="M58 62 h40 l8 8 h76 a8 8 0 0 1 8 8 v8 H58 a8 8 0 0 1 -8 -8 V70 a8 8 0 0 1 8 -8 z" fill="#1F6B55"/>
+
+  <!-- Document sliding into the folder -->
+  <g class="doc">
+    <rect x="84" y="30" width="72" height="66" rx="6" fill="#FFFFFF" stroke="#CBDBD0" stroke-width="2"/>
+    <rect x="94" y="44" width="42" height="5" rx="2.5" fill="#123F35"/>
+    <rect x="94" y="56" width="52" height="4" rx="2" fill="#DCE9E1"/>
+    <rect x="94" y="66" width="44" height="4" rx="2" fill="#DCE9E1"/>
+    <rect x="94" y="76" width="34" height="4" rx="2" fill="#DCE9E1"/>
+    <!-- Checkmark badge on the document -->
+    <g class="chk">
+      <circle cx="140" cy="52" r="13" fill="#DCE9E1" stroke="#123F35" stroke-width="2"/>
+      <path d="M134 52 l4 4 l8 -8" fill="none" stroke="#123F35" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- Folder front flap (in front of the document) -->
+  <path d="M52 84 h136 a8 8 0 0 1 8 8 v20 a8 8 0 0 1 -8 8 H52 a8 8 0 0 1 -8 -8 V92 a8 8 0 0 1 8 -8 z" fill="#123F35"/>
+</svg>
