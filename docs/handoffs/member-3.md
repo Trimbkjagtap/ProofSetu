@@ -32,7 +32,8 @@ pytest -q tests/test_rules.py
 - `RULE_INDEX` — `keyword` (default, implemented) | `chroma` | `faiss` (future adapters; same return shape).
 
 ## Exact steps Member 4 must perform to integrate
-1. Ensure `backend/__init__.py` exists (package root) so `backend.rules.*` imports resolve.
+1. `backend/__init__.py` is now included (empty package marker) so `backend.rules.*`
+   imports resolve. Left empty on purpose — app wiring stays yours in `backend/main.py`.
 2. In `backend/main.py`:
    ```python
    from backend.rules.router import router as rules_router
