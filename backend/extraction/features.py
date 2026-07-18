@@ -37,7 +37,6 @@ _PURPOSE: dict[str, str] = {
     "ending_balance": "Asset value reference",
     # government_id
     "full_name": "Identity",
-    "date_of_birth": "Identity (only if program-permitted)",
     "id_number_last4": "Identity reference (last 4 digits only; full number never stored)",
     "expiration_date": "Document validity check",
 }

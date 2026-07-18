@@ -30,7 +30,6 @@ _DATE_FIELDS = {
     "expiration_date",
     "period_start",
     "period_end",
-    "date_of_birth",
 }
 
 # Label tokens that precede each allowlisted value on a document line.
@@ -56,7 +55,6 @@ _FIELD_LABELS: dict[str, tuple[str, ...]] = {
     "ending_balance": ("ending balance", "current balance"),
     # government_id (multi-word labels first so the value excludes the label)
     "full_name": ("full name", "name"),
-    "date_of_birth": ("date of birth", "dob", "birth"),
     "id_number_last4": ("id number", "id no", "license number", "license", "number", "id"),
     "expiration_date": ("expiration date", "expiration", "expires", "exp"),
 }

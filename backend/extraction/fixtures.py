@@ -47,7 +47,6 @@ def _government_id_fields() -> List[ExtractedField]:
     # expiration_date is in the past to drive the "expired ID" checklist demo.
     return [
         _f("full_name", "Jordan Rivera", 0.95, 1, 90, 140, 240, 30),
-        _f("date_of_birth", "1990-06-12", 0.91, 1, 90, 190, 150, 24),
         _f("id_number_last4", "4821", 0.89, 1, 90, 240, 120, 24),  # last-4 only
         _f("expiration_date", "2024-02-10", 0.90, 1, 90, 290, 150, 24),
     ]

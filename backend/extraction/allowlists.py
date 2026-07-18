@@ -35,7 +35,9 @@ ALLOWLISTS: dict[DocumentType, tuple[str, ...]] = {
     ),
     DocumentType.government_id: (
         "full_name",
-        "date_of_birth",  # only if allowed by the program
+        # date_of_birth intentionally NOT extracted: it is not published in the
+        # team's /features registry, and the handbook forbids hidden fields
+        # ("serve /features with every extracted field"). Data-minimizing.
         "id_number_last4",  # NEVER the full ID number
         "expiration_date",
     ),

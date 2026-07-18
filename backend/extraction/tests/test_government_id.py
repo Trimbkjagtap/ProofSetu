@@ -49,9 +49,14 @@ def test_classify_government_id():
 def test_gov_id_fields_extracted():
     fields = _by_name(map_fields(DocumentType.government_id, _gov_id_ocr()))
     assert "Jordan Rivera" in str(fields["full_name"].value)
-    assert fields["date_of_birth"].value == "1990-06-12"
     assert fields["expiration_date"].value == "2024-02-10"
     assert fields["expiration_date"].state == FieldState.unconfirmed
+
+
+def test_gov_id_does_not_extract_date_of_birth():
+    # DOB is intentionally not extracted (data minimization; not in /features).
+    names = {f.name for f in map_fields(DocumentType.government_id, _gov_id_ocr())}
+    assert "date_of_birth" not in names
 
 
 def test_gov_id_number_is_last4_only():

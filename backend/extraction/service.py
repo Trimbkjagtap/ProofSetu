@@ -45,16 +45,25 @@ class ExtractionService:
         # persistence is Member 4's store adapter; this is a local fallback only.
         self._docs: Dict[str, ExtractionResponse] = {}
         self._stale: Dict[str, bool] = {}
+        # doc_id -> session_id, so PATCH can route confirmed fields to the
+        # session's profile (Member 4's profile_store).
+        self._doc_session: Dict[str, str] = {}
         # Content-free safety events (no document text ever stored here).
         self._safety_events: list[dict] = []
 
     # -- POST /documents -------------------------------------------------
     def extract(
-        self, filename: str | None, content: bytes, content_type: str | None
+        self,
+        filename: str | None,
+        content: bytes,
+        content_type: str | None,
+        session_id: str | None = None,
     ) -> ExtractionResponse:
         validate_upload(filename, content_type, content)
 
         document_id = f"doc_{uuid.uuid4().hex[:8]}"
+        if session_id:
+            self._doc_session[document_id] = session_id
         provider = self._ocr_provider_override or get_ocr_provider(self._ocr_provider_name)
 
         if provider is None:
@@ -133,6 +142,9 @@ class ExtractionService:
 
     def get_document(self, document_id: str) -> ExtractionResponse | None:
         return self._docs.get(document_id)
+
+    def session_for(self, document_id: str) -> str | None:
+        return self._doc_session.get(document_id)
 
     def confirmed_fields(self, document_id: str) -> list[ExtractedField]:
         """Return only renter-verified fields (confirmed or corrected).
