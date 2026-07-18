@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="A document being read line by line">
+  <style>
+    .scan { animation: scan 2.6s ease-in-out infinite; }
+    .tick { animation: tick 2.6s ease-in-out infinite; transform-origin: center; }
+    @keyframes scan {
+      0%   { transform: translateY(0);    opacity: 0; }
+      12%  { opacity: 0.5; }
+      50%  { transform: translateY(70px); opacity: 0.5; }
+      88%  { opacity: 0.5; }
+      100% { transform: translateY(0);    opacity: 0; }
+    }
+    @keyframes tick {
+      0%, 55% { opacity: 0; }
+      70%, 100% { opacity: 0.9; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .scan { animation: none; opacity: 0; }
+      .tick { animation: none; opacity: 0.9; }
+    }
+  </style>
+
+  <!-- Document sheet -->
+  <rect x="78" y="26" width="84" height="108" rx="6" fill="#FFFDF8" stroke="#CDD8D0" stroke-width="2"/>
+  <!-- Header block -->
+  <rect x="90" y="40" width="44" height="6" rx="3" fill="#174A3A"/>
+  <rect x="90" y="52" width="60" height="4" rx="2" fill="#DCE8DF"/>
+  <!-- Body lines -->
+  <rect x="90" y="70" width="60" height="4" rx="2" fill="#CDD8D0"/>
+  <rect x="90" y="82" width="52" height="4" rx="2" fill="#CDD8D0"/>
+  <rect x="90" y="94" width="60" height="4" rx="2" fill="#CDD8D0"/>
+  <rect x="90" y="106" width="40" height="4" rx="2" fill="#CDD8D0"/>
+
+  <!-- Scanning bar sweeping down the sheet -->
+  <rect class="scan" x="80" y="40" width="80" height="8" rx="4" fill="#174A3A" opacity="0"/>
+
+  <!-- Confirmation tick that fades in at the end of each pass -->
+  <g class="tick">
+    <circle cx="150" cy="120" r="12" fill="#DCE8DF" stroke="#174A3A" stroke-width="2"/>
+    <path d="M144 120 l4 4 l8 -8" fill="none" stroke="#174A3A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
