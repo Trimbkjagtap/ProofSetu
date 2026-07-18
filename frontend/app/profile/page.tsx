@@ -6,11 +6,11 @@ export const metadata: Metadata = { title: "Your documents" };
 
 export default function ProfilePage() {
   return (
-    <div>
+    <div className="page-enter">
       <PageHeader
         eyebrow="Step 2 of 5"
-        title="Your documents"
-        description="Upload synthetic documents and confirm the information we read from them."
+        title="Tell us about your household"
+        description="Add your documents and confirm the details we find. You’re always in control of what’s used."
       />
       <ProfileWorkspace />
     </div>

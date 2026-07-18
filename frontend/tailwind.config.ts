@@ -1,9 +1,8 @@
 import type { Config } from "tailwindcss";
 
 /**
- * ProofSetu civic-service design tokens.
- * Colors map to the approved palette. Red (`error`) is reserved strictly for
- * errors, expired documents, and destructive actions.
+ * ProofSetu design tokens — warm, sophisticated public-service palette.
+ * Red (`danger`) is reserved strictly for errors and expired documents.
  */
 const config: Config = {
   content: [
@@ -15,31 +14,40 @@ const config: Config = {
     extend: {
       colors: {
         forest: {
-          DEFAULT: "#174A3A", // deep forest green — primary
-          dark: "#0F352A", // dark evergreen — hover / headings
+          DEFAULT: "#123F35", // deep forest green — primary
+          dark: "#0E332B", // darker evergreen — hover / headings
         },
-        ivory: "#F7F4EC", // warm ivory background
-        paper: "#FFFDF8", // paper white — surfaces
-        sage: "#DCE8DF", // soft sage — subtle fills
-        terracotta: "#C65D3A", // muted terracotta accent (non-status)
-        citation: "#315F7D", // citation blue
-        ink: "#17211B", // main text
-        muted: "#56635C", // secondary text
-        line: "#CDD8D0", // borders
-        danger: "#B42318", // error / expired / destructive ONLY
+        emerald: "#1F6B55", // emerald green — gradient partner / accents
+        sage: "#DCE9E1", // soft sage — subtle fills
+        cream: "#FAF7F0", // warm cream
+        ivory: "#FAF7F0", // alias kept for existing usage
+        paper: "#FFFFFF", // white surfaces
+        terracotta: "#C65D3A", // muted accent (non-status)
+        citation: "#315F7D", // citation blue — references / evidence
+        ink: "#16241E", // main text
+        muted: "#55635B", // secondary text
+        line: "#CBDBD0", // thin sage border
+        danger: "#B42318", // error / expired ONLY
         warning: "#9A6700", // warning / expiring
+      },
+      backgroundImage: {
+        "app-gradient":
+          "linear-gradient(135deg, #FAF7F0 0%, #F2F7F3 55%, #E7F1EB 100%)",
+        "primary-gradient":
+          "linear-gradient(135deg, #123F35 0%, #1F6B55 100%)",
+        "panel-gradient": "linear-gradient(135deg, #FFFFFF 0%, #EEF6F1 100%)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
       },
       borderRadius: {
-        card: "10px",
+        card: "18px",
       },
       boxShadow: {
-        // restrained, paper-like elevation
-        card: "0 1px 2px rgba(15, 53, 42, 0.06), 0 1px 3px rgba(15, 53, 42, 0.04)",
-        raised: "0 4px 12px rgba(15, 53, 42, 0.10)",
+        // Soft, realistic elevation in the forest-green tint.
+        card: "0 1px 2px rgba(18, 63, 53, 0.04), 0 6px 16px rgba(18, 63, 53, 0.06)",
+        raised: "0 12px 30px rgba(18, 63, 53, 0.13)",
       },
       maxWidth: {
         prose: "68ch",

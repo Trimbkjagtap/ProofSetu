@@ -6,11 +6,11 @@ export const metadata: Metadata = { title: "Your review-ready packet" };
 
 export default function PacketPage() {
   return (
-    <div>
+    <div className="page-enter">
       <PageHeader
         eyebrow="Step 5 of 5"
-        title="Your review-ready packet"
-        description="Review what goes into your packet. Only information you confirmed will be included."
+        title="Your review packet is ready"
+        description="Review everything before downloading your packet."
       />
       <PacketView />
     </div>

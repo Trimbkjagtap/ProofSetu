@@ -14,6 +14,7 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { useApp } from "@/lib/state/AppContext";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
+import { Button } from "@/components/ui/Button";
 import { AccessibilityPreferences } from "./AccessibilityPreferences";
 import { WhatWeUseDialog } from "./WhatWeUseDialog";
 
@@ -24,19 +25,19 @@ const POINTS = [
   },
   {
     Icon: Clock3,
-    text: "Your information is stored temporarily for this session and is not kept afterward.",
+    text: "We keep your information only for this visit, then it’s gone.",
   },
   {
     Icon: UserCheck,
-    text: "You confirm every detail we read from a document before it is used.",
+    text: "You confirm every detail before it’s used.",
   },
   {
     Icon: ShieldOff,
-    text: "ProofSetu never determines eligibility. A qualified housing professional decides.",
+    text: "ProofSetu helps prepare your information. A housing professional makes the final decision.",
   },
   {
     Icon: Trash2,
-    text: "You can delete everything at any time using the control in the header.",
+    text: "You can delete everything at any time from the header.",
   },
 ];
 
@@ -122,28 +123,31 @@ export function ConsentForm() {
               className="mt-1 h-5 w-5 shrink-0 accent-forest"
             />
             <span className="text-ink">
-              I understand that ProofSetu uses synthetic documents, stores my
-              information only for this session, and does not determine
-              eligibility. I confirm I want to start my document check.
+              I understand ProofSetu uses synthetic documents, keeps my information
+              only for this visit, and doesn’t decide eligibility. I’m ready to
+              begin.
             </span>
           </label>
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            className="mt-5"
             onClick={handleStart}
             disabled={!agreed || starting}
             aria-describedby={!agreed ? helperId : undefined}
-            className="mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-card border border-forest bg-forest px-5 py-2.5 font-medium text-paper transition-colors hover:bg-forest-dark disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none"
           >
             {starting ? (
-              "Starting…"
+              "Getting started…"
             ) : (
               <>
-                Start my document check
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Continue
+                <ArrowRight
+                  className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </>
             )}
-          </button>
+          </Button>
           {!agreed && (
             <p id={helperId} className="mt-2 text-sm text-muted">
               Please check the box above to continue.
@@ -155,17 +159,15 @@ export function ConsentForm() {
       {/* Sidebar: preferences + reassurance */}
       <div className="space-y-6">
         <AccessibilityPreferences />
-        <div className="rounded-card border border-line bg-paper p-5 shadow-card">
+        <div className="rounded-card border border-line bg-panel-gradient p-5 shadow-card">
           <div className="flex items-start gap-2">
             <CheckCircle2
-              className="mt-0.5 h-5 w-5 shrink-0 text-forest"
+              className="mt-0.5 h-5 w-5 shrink-0 text-emerald"
               aria-hidden="true"
             />
-            <p className="text-ink">
-              <span className="font-medium">
-                ProofSetu prepares. You confirm. A qualified housing professional
-                decides.
-              </span>
+            <p className="font-medium text-forest-dark">
+              ProofSetu helps prepare your information. A housing professional makes
+              the final decision.
             </p>
           </div>
         </div>

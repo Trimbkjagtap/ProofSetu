@@ -102,15 +102,14 @@ export function DocumentUploader({ onFile, disabled = false }: DocumentUploaderP
           disabled ? "opacity-60" : "",
         ].join(" ")}
       >
-        <UploadCloud className="mx-auto h-8 w-8 text-forest" aria-hidden="true" />
+        <UploadCloud className="mx-auto h-8 w-8 text-emerald" aria-hidden="true" />
         <p className="mt-3 font-medium text-ink">
-          Drag and drop a document here
+          Drop your file here, or choose one from your device.
         </p>
-        <p className="text-sm text-muted">or choose a file from your device</p>
 
         <label
           className={[
-            "mt-4 inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-card border border-forest bg-forest px-5 py-2.5 font-medium text-paper hover:bg-forest-dark focus-within:outline-none focus-within:ring-2 focus-within:ring-citation focus-within:ring-offset-2",
+            "mt-4 inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-card border border-transparent bg-primary-gradient px-5 py-2.5 font-medium text-white shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-raised hover:brightness-[1.06] focus-within:outline-none focus-within:ring-2 focus-within:ring-citation focus-within:ring-offset-2",
             disabled || uploading ? "pointer-events-none opacity-60" : "",
           ].join(" ")}
         >

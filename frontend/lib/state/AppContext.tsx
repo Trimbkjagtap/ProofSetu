@@ -162,11 +162,21 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Persist on change (only once hydration has run, so we never clobber stored
-  // state with the initial value on first paint).
+  // state with the initial value on first paint). When the session has been
+  // deleted/reset (no session, no consent, no documents), remove the key so
+  // "Delete everything" leaves sessionStorage empty.
   useEffect(() => {
     if (!hydrated.current) return;
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const isCleared =
+        !state.session &&
+        !state.consented &&
+        Object.keys(state.documents).length === 0;
+      if (isCleared) {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } else {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
     } catch {
       // Storage may be full or blocked; the app still works in-memory.
     }

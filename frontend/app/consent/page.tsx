@@ -6,11 +6,11 @@ export const metadata: Metadata = { title: "Consent" };
 
 export default function ConsentPage() {
   return (
-    <div>
+    <div className="page-enter">
       <PageHeader
         eyebrow="Step 1 of 5"
-        title="Get your housing documents review-ready"
-        description="From scattered documents to a review-ready housing packet."
+        title="Let’s get your documents ready"
+        description="We’ll help you organize your information before a housing professional reviews it."
       />
       <ConsentForm />
     </div>

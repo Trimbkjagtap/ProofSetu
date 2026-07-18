@@ -44,12 +44,12 @@ export function RulesQuery() {
       <div className="flex items-center gap-2">
         <MessagesSquare className="h-5 w-5 text-forest" aria-hidden="true" />
         <h2 id="ask-heading" className="text-lg">
-          Ask about the published rule
+          Have a question about this calculation?
         </h2>
       </div>
       <p className="mt-1 text-muted">
-        ProofSetu can explain the rule and the math. It cannot tell you whether you
-        will be approved — a qualified housing professional decides that.
+        We can explain the rule and the math behind it. The final decision is always
+        made by a housing professional.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4">

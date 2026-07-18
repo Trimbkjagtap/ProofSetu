@@ -7,11 +7,15 @@ import type { RulesResponse } from "@/types/domain";
 import { apiClient } from "@/lib/api/client";
 import { useApp } from "@/lib/state/AppContext";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
+import { buildCalculation, confirmedGrossPay } from "@/lib/calculation";
 import { CalculationBreakdown } from "./CalculationBreakdown";
 import { CitationCard } from "./CitationCard";
 import { RulesQuery } from "./RulesQuery";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { BottomNav } from "@/components/shell/BottomNav";
+import { BackButton } from "@/components/shell/BackButton";
 
 /** A neutral, grounded question used to load the calculation on arrival. */
 const OVERVIEW_QUESTION =
@@ -22,7 +26,7 @@ const OVERVIEW_QUESTION =
  * neutral facts, then offers the rule-question input. Shows no verdict anywhere.
  */
 export function FitCheckView() {
-  const { state, dispatch } = useApp();
+  const { state, dispatch, confirmedFields } = useApp();
   const { announce } = useAnnounce();
   const [data, setData] = useState<RulesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,8 +72,17 @@ export function FitCheckView() {
     );
   }
 
+  // Derive the calculation from the renter's CONFIRMED income (shared state),
+  // using the published threshold from the rule. This keeps Profile, Fit Check,
+  // and Packet showing the same numbers.
+  const monthlyIncome = confirmedGrossPay(confirmedFields);
+  const calculation =
+    monthlyIncome === null
+      ? null
+      : buildCalculation(monthlyIncome, data.calculation.threshold);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {followedCorrection.current && (
         <div
           role="status"
@@ -87,27 +100,43 @@ export function FitCheckView() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <CalculationBreakdown calculation={data.calculation} />
+        {calculation ? (
+          <CalculationBreakdown calculation={calculation} />
+        ) : (
+          <div className="flex items-start gap-3 rounded-card border border-line bg-paper p-6 shadow-card">
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-forest" aria-hidden="true" />
+            <p className="text-ink">
+              Confirm your income on the{" "}
+              <Link
+                href="/profile"
+                className="text-forest underline underline-offset-4 hover:text-forest-dark"
+              >
+                documents step
+              </Link>{" "}
+              to see the calculation.
+            </p>
+          </div>
+        )}
         <CitationCard citation={data.citation} />
       </div>
 
       {/* Neutral disclaimer. */}
-      <p className="rounded-card border border-line bg-ivory p-4 text-muted">
-        {data.disclaimer} ProofSetu prepares. You confirm. A qualified housing
-        professional decides.
+      <p className="rounded-card border border-line bg-panel-gradient p-4 text-muted">
+        {data.disclaimer}
       </p>
 
       <RulesQuery />
 
-      <div className="border-t border-line pt-4">
-        <Link
-          href="/readiness"
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-card border border-forest bg-forest px-5 py-2.5 font-medium text-paper hover:bg-forest-dark focus-visible:outline-none"
-        >
-          Continue to document readiness
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </div>
+      <BottomNav>
+        <BackButton href="/profile" />
+        <LinkButton href="/readiness" variant="primary">
+          Continue
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </LinkButton>
+      </BottomNav>
     </div>
   );
 }

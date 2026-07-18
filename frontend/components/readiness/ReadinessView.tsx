@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { ArrowRight, ClipboardList, Info } from "lucide-react";
 import type { ChecklistItem, ChecklistStatus } from "@/types/domain";
 import { apiClient } from "@/lib/api/client";
@@ -10,6 +9,9 @@ import { ChecklistItem as ChecklistItemRow } from "./ChecklistItem";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { BottomNav } from "@/components/shell/BottomNav";
+import { BackButton } from "@/components/shell/BackButton";
 
 /** Order in which status groups are shown: things needing attention first. */
 const GROUP_ORDER: { status: ChecklistStatus; heading: string }[] = [
@@ -79,7 +81,7 @@ export function ReadinessView() {
   })).filter((c) => c.count > 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Non-numeric progress summary (word-based, no score/percentage). */}
       <section
         aria-labelledby="summary-heading"
@@ -139,15 +141,16 @@ export function ReadinessView() {
         );
       })}
 
-      <div className="border-t border-line pt-4">
-        <Link
-          href="/packet"
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-card border border-forest bg-forest px-5 py-2.5 font-medium text-paper hover:bg-forest-dark focus-visible:outline-none"
-        >
-          Continue to packet preview
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </div>
+      <BottomNav>
+        <BackButton href="/fit-check" />
+        <LinkButton href="/packet" variant="primary">
+          Review packet
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </LinkButton>
+      </BottomNav>
     </div>
   );
 }

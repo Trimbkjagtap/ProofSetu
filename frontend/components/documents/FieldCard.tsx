@@ -104,7 +104,7 @@ export function FieldCard({
       onMouseEnter={() => onActivate(field.name)}
       onMouseLeave={() => onActivate(null)}
       className={[
-        "rounded-card border bg-paper p-4 shadow-card transition-colors",
+        "rounded-card border bg-paper p-4 shadow-card transition-all duration-150 hover:shadow-raised",
         isActive ? "border-citation ring-1 ring-citation/40" : "border-line",
       ].join(" ")}
     >
@@ -149,7 +149,7 @@ export function FieldCard({
           <div className="mt-3 flex flex-wrap gap-2">
             <Button variant="primary" onClick={save}>
               <Check className="h-4 w-4" aria-hidden="true" />
-              Save
+              Save change
             </Button>
             <Button variant="secondary" onClick={cancelEdit}>
               Cancel
@@ -174,7 +174,7 @@ export function FieldCard({
             )}
             <Button variant="secondary" onClick={startEdit}>
               <Pencil className="h-4 w-4" aria-hidden="true" />
-              Edit
+              Change
             </Button>
             {isSettled && (
               <Button variant="ghost" onClick={undo}>

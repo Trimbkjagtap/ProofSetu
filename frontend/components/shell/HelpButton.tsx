@@ -32,8 +32,9 @@ export function HelpButton() {
           read from them, understand the published 2026 rules, and prepare a
           review-ready packet.
         </span>
-        <span className="mt-3 block font-medium text-ink">
-          ProofSetu prepares. You confirm. A qualified housing professional decides.
+        <span className="mt-3 block font-medium text-forest-dark">
+          ProofSetu helps prepare your information. A housing professional makes the
+          final decision.
         </span>
       </ConfirmationDialog>
     </>

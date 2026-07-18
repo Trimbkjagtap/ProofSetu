@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useId, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, FileSearch, Info, RefreshCw } from "lucide-react";
 import type { ExtractedField, ExtractionResponse, FieldUpdate } from "@/types/domain";
 import { apiClient } from "@/lib/api/client";
@@ -12,10 +12,15 @@ import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { DocumentPreview } from "@/components/documents/DocumentPreview";
 import { FieldCard } from "@/components/documents/FieldCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { BottomNav } from "@/components/shell/BottomNav";
+import { BackButton } from "@/components/shell/BackButton";
 
 /** Orchestrates upload → preview + evidence → confirm/correct for the profile step. */
 export function ProfileWorkspace() {
   const { state, dispatch } = useApp();
+  const router = useRouter();
+  const continueHelpId = useId();
   const [activeField, setActiveField] = useState<string | null>(null);
   // Original values captured at upload time, keyed by documentId then field name.
   const originals = useRef<Record<string, Record<string, string | number>>>({});
@@ -54,20 +59,37 @@ export function ProfileWorkspace() {
     ? humanizeDocumentType(document.documentType)
     : "document";
 
+  // Continue is gated until a document is uploaded AND every field is settled.
+  const continueDisabled = !document || unconfirmedCount > 0;
+  const continueHelp = !document
+    ? "Add a document and confirm its details to continue."
+    : unconfirmedCount > 0
+      ? `Please confirm or change all ${document.fields.length} details to continue.`
+      : null;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <HouseholdSizeSelector />
 
       {!document ? (
         <section aria-labelledby="upload-heading" className="space-y-4">
           <h2 id="upload-heading" className="text-lg">
-            Upload a document
+            Add a document
           </h2>
+          {/* Small local animation for the upload area (accessible alt text). */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/upload-check.svg"
+            alt="A document being filed away and marked with a checkmark"
+            width={240}
+            height={150}
+            className="mx-auto h-28 w-auto"
+          />
           <DocumentUploader onFile={handleUpload} />
           <EmptyState
             Icon={FileSearch}
-            title="No document yet"
-            description="Once you upload a synthetic pay stub, we’ll show what we read and let you confirm each detail."
+            title="Nothing added yet"
+            description="Once you add a synthetic pay stub, we’ll show what we found and let you confirm each detail."
           />
         </section>
       ) : (
@@ -86,11 +108,11 @@ export function ProfileWorkspace() {
           <section aria-labelledby="extracted-heading" className="space-y-4">
             <div>
               <h2 id="extracted-heading" className="text-xl">
-                Information we read
+                Check what we found
               </h2>
               <p className="mt-1 text-muted">
-                Confirm or correct each detail. Hover or focus a card to see where it
-                was read on the document.
+                Please confirm each detail. If something is wrong, you can change it.
+                Hover or focus a card to see where it came from on the document.
               </p>
             </div>
 
@@ -147,22 +169,30 @@ export function ProfileWorkspace() {
                 </span>
               </div>
             )}
-
-            <div className="border-t border-line pt-4">
-              <Link
-                href="/fit-check"
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-card border border-forest bg-forest px-5 py-2.5 font-medium text-paper hover:bg-forest-dark focus-visible:outline-none"
-              >
-                Continue to rules and calculation
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <p className="mt-2 text-sm text-muted">
-                ProofSetu prepares. You confirm. A qualified housing professional
-                decides.
-              </p>
-            </div>
           </section>
         </div>
+      )}
+
+      {/* Bottom navigation: Back to Consent + gated Continue. */}
+      <BottomNav>
+        <BackButton href="/consent" />
+        <Button
+          variant="primary"
+          onClick={() => router.push("/fit-check")}
+          disabled={continueDisabled}
+          aria-describedby={continueHelp ? continueHelpId : undefined}
+        >
+          Continue
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </Button>
+      </BottomNav>
+      {continueHelp && (
+        <p id={continueHelpId} className="mt-2 text-right text-sm text-muted">
+          {continueHelp}
+        </p>
       )}
     </div>
   );

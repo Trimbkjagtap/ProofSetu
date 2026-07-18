@@ -25,7 +25,7 @@ export function ChecklistItem({ item }: ChecklistItemProps) {
   const needsFix = item.status !== "present";
 
   return (
-    <li className="rounded-card border border-line bg-paper p-4 shadow-card">
+    <li className="rounded-card border border-line bg-paper p-4 shadow-card transition-shadow duration-150 hover:shadow-raised">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

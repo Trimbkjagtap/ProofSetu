@@ -6,11 +6,11 @@ export const metadata: Metadata = { title: "Document readiness" };
 
 export default function ReadinessPage() {
   return (
-    <div>
+    <div className="page-enter">
       <PageHeader
         eyebrow="Step 4 of 5"
-        title="Check your documents"
-        description="See which documents are present, missing, expiring, or expired. This checklist helps you prepare — it is not an eligibility score."
+        title="Let’s check your documents"
+        description="See what is ready and what still needs your attention."
       />
       <ReadinessView />
     </div>

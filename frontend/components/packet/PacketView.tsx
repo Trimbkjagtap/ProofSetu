@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   CheckCircle2,
   Download,
   FileText,
@@ -22,12 +21,15 @@ import { useApp } from "@/lib/state/AppContext";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
 import { humanizeDocumentType } from "@/lib/documents";
 import { formatFieldValue, humanizeFieldName } from "@/lib/format";
+import { buildCalculation, confirmedGrossPay } from "@/lib/calculation";
 import { buildMockPacketText, downloadTextFile } from "@/lib/packet";
 import { CalculationBreakdown } from "@/components/rules/CalculationBreakdown";
 import { CitationCard } from "@/components/rules/CitationCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { DeleteSessionButton } from "@/components/shell/DeleteSessionButton";
+import { BottomNav } from "@/components/shell/BottomNav";
+import { BackButton } from "@/components/shell/BackButton";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 
@@ -98,11 +100,18 @@ export function PacketView() {
       .filter((dt) => state.packetSelections[dt] ?? true)
       .map((dt) => humanizeDocumentType(dt));
 
+    // Same confirmed-income-driven calculation shown on screen.
+    const monthly = confirmedGrossPay(confirmedFields);
+    const calculation =
+      monthly === null
+        ? current.rules.calculation
+        : buildCalculation(monthly, current.rules.calculation.threshold);
+
     const text = buildMockPacketText({
       renterName,
       householdSize: state.householdSize,
       confirmedFields,
-      calculation: current.rules.calculation,
+      calculation,
       citation: current.rules.citation,
       includedDocuments: includedLabels,
       attention: current.attention.map((a) => ({ label: a.label, status: a.status })),
@@ -125,11 +134,19 @@ export function PacketView() {
 
   const { rules, attention, includableDocuments } = data;
 
+  // Calculation derived from the confirmed income in shared state (same as
+  // Fit Check), not from the raw mock — so the numbers always match.
+  const monthlyIncome = confirmedGrossPay(confirmedFields);
+  const calculation =
+    monthlyIncome === null
+      ? null
+      : buildCalculation(monthlyIncome, rules.calculation.threshold);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Confirmed-only assurance. */}
-      <div className="flex items-start gap-2 rounded-card border border-forest/30 bg-sage p-4 text-forest-dark">
-        <Lock className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+      <div className="flex items-start gap-3 rounded-card border border-line bg-panel-gradient p-4 text-forest-dark shadow-card">
+        <Lock className="mt-0.5 h-5 w-5 shrink-0 text-emerald" aria-hidden="true" />
         <p className="font-medium">Only information you confirmed will be included.</p>
       </div>
 
@@ -141,7 +158,7 @@ export function PacketView() {
         <div className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-forest" aria-hidden="true" />
           <h2 id="confirmed-heading" className="text-lg">
-            Confirmed information
+            Information you confirmed
           </h2>
         </div>
 
@@ -191,7 +208,23 @@ export function PacketView() {
 
       {/* Calculation + citation */}
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <CalculationBreakdown calculation={rules.calculation} />
+        {calculation ? (
+          <CalculationBreakdown calculation={calculation} />
+        ) : (
+          <div className="flex items-start gap-3 rounded-card border border-line bg-paper p-6 shadow-card">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-forest" aria-hidden="true" />
+            <p className="text-ink">
+              Confirm your income on the{" "}
+              <Link
+                href="/profile"
+                className="text-forest underline underline-offset-4 hover:text-forest-dark"
+              >
+                documents step
+              </Link>{" "}
+              to include the calculation.
+            </p>
+          </div>
+        )}
         <CitationCard citation={rules.citation} />
       </div>
 
@@ -254,7 +287,7 @@ export function PacketView() {
           className="rounded-card border border-line bg-paper p-6 shadow-card"
         >
           <h2 id="attention-heading" className="text-lg">
-            Not included: documents that need attention
+            Documents that still need attention
           </h2>
           <p className="mt-1 text-muted">
             These aren’t part of your packet yet. You can add them on the documents
@@ -287,30 +320,25 @@ export function PacketView() {
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex flex-col gap-3 border-t border-line pt-4 sm:flex-row sm:flex-wrap sm:items-center">
-        <Button variant="primary" onClick={() => void handleDownload(data)}>
-          <Download className="h-4 w-4" aria-hidden="true" />
-          Download PDF
-        </Button>
-        <Link
-          href="/profile"
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-card border border-line bg-paper px-5 py-2.5 font-medium text-forest hover:bg-sage focus-visible:outline-none"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back and edit
-        </Link>
-        <div className="sm:ml-auto">
+      {/* Bottom navigation: Back to Readiness + packet actions. */}
+      <BottomNav>
+        <BackButton href="/readiness" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Button variant="primary" onClick={() => void handleDownload(data)}>
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Download packet
+          </Button>
           <DeleteSessionButton compact />
         </div>
-      </div>
+      </BottomNav>
 
       <p className="text-sm text-muted">
         Prototype download generated from confirmed mock information — not an
         official document.
       </p>
-      <p className="text-sm text-muted">
-        ProofSetu prepares. You confirm. A qualified housing professional decides.
+      <p className="text-sm font-medium text-forest-dark">
+        ProofSetu helps prepare your information. A housing professional makes the
+        final decision.
       </p>
     </div>
   );

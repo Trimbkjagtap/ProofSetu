@@ -6,11 +6,11 @@ export const metadata: Metadata = { title: "Income and the published limit" };
 
 export default function FitCheckPage() {
   return (
-    <div>
+    <div className="page-enter">
       <PageHeader
         eyebrow="Step 3 of 5"
-        title="Your income and the published limit"
-        description="A neutral comparison of your confirmed income against the published 2026 rule. This does not determine eligibility."
+        title="See how the numbers were calculated"
+        description="Here is a clear comparison using the information you confirmed."
       />
       <FitCheckView />
     </div>
