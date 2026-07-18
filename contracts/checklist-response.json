@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "documentType": "government_id",
+      "label": "Photo identification",
+      "required": true,
+      "status": "expired",
+      "fixHint": "Upload an identification document that has not expired."
+    },
+    {
+      "documentType": "bank_statement",
+      "label": "Recent bank statement",
+      "required": true,
+      "status": "missing",
+      "fixHint": "Upload the most recent statement."
+    }
+  ]
+}
