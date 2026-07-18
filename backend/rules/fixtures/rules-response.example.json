@@ -1,0 +1,18 @@
+{
+  "answer": "Anticipated annual income is projected by annualizing current gross income. Monthly gross income is multiplied by 12. For the confirmed value, $2,650 x 12 = $31,800 counted annual income, compared to the $46,700 limit (difference $14,900).",
+  "calculation": {
+    "confirmedValue": 2650,
+    "formula": "$2,650 x 12",
+    "annualizedIncome": 31800,
+    "threshold": 46700,
+    "difference": 14900
+  },
+  "citation": {
+    "source": "2026 LIHTC Program Rule Corpus",
+    "effectiveDate": "2026-05-01",
+    "ruleYear": 2026,
+    "section": "Income annualization"
+  },
+  "abstained": false,
+  "disclaimer": "This comparison does not determine eligibility."
+}

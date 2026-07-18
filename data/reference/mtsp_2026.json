@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "source": "HUD Multifamily Tax Subsidy Projects (MTSP) Income Limits",
+    "ruleYear": 2026,
+    "effectiveDate": "2026-05-01",
+    "metro": "Cambridge-Newton-Framingham, MA HUD Metro FMR Area",
+    "notice": "DEMO FIXTURE — frozen subset authored from the supplied 2026 pack for one metro. Not a live HUD lookup. No live rule search during the demo.",
+    "amiPercents": [50, 60]
+  },
+  "thresholds": {
+    "cambridge_boston": {
+      "50": {
+        "1": 46700,
+        "2": 53350,
+        "3": 60000,
+        "4": 66650,
+        "5": 72000,
+        "6": 77350
+      },
+      "60": {
+        "1": 56040,
+        "2": 64020,
+        "3": 72000,
+        "4": 79980,
+        "5": 86400,
+        "6": 92820
+      }
+    }
+  }
+}
