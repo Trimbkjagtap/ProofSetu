@@ -56,11 +56,17 @@ class TesseractOcrProvider:
             raise OcrUnavailable("PDF rasterization not wired for Tesseract yet.")
         try:
             import io
+            import os
 
             import pytesseract  # type: ignore
             from PIL import Image  # type: ignore
         except Exception as exc:  # pragma: no cover - depends on optional deps
             raise OcrUnavailable("pytesseract/Pillow not installed.") from exc
+
+        # Allow pointing at the binary when it is not on PATH.
+        cmd = os.getenv("TESSERACT_CMD")
+        if cmd:
+            pytesseract.pytesseract.tesseract_cmd = cmd
 
         try:
             image = Image.open(io.BytesIO(content))

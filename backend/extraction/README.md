@@ -23,6 +23,19 @@ demo stable and unblocks the frontend before live OCR exists.
 |---|---|---|---|
 | `OCR_PROVIDER` | `fixture` \| `tesseract` \| `textract` | `fixture` | `textract` is not wired tonight and falls back to fixture. |
 | `MAX_UPLOAD_MB` | number | `10` | Upload size cap. |
+| `TESSERACT_CMD` | path | (unset) | Full path to `tesseract.exe` when the engine is not on PATH. |
+
+## Real OCR (optional, no API key)
+The `tesseract` provider needs the Tesseract **engine binary** (free, local):
+```bash
+# Windows (run in an ADMIN terminal):
+choco install tesseract -y
+# then, from repo root:
+OCR_PROVIDER=tesseract uvicorn backend.extraction.dev_app:app --port 8001
+```
+If the binary is not on PATH, set `TESSERACT_CMD` to e.g.
+`C:\Program Files\Tesseract-OCR\tesseract.exe`. Without the binary the pipeline
+falls back to the deterministic fixture automatically.
 
 ## Run locally (from repo root)
 ```bash

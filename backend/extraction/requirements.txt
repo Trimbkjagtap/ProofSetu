@@ -12,6 +12,8 @@ pydantic>=2.6
 pytest>=8.0
 httpx>=0.27               # FastAPI TestClient
 
-# --- optional real OCR (P1); fixture path works without these ---
-# pytesseract>=0.3.10
-# Pillow>=10.0
+# --- real OCR (P1) + synthetic demo generator; fixture path works without them ---
+# Requires the Tesseract ENGINE BINARY on PATH (or set TESSERACT_CMD).
+#   Windows: choco install tesseract   (admin)  |  Debian: apt-get install tesseract-ocr
+pytesseract>=0.3.10
+Pillow>=10.0
