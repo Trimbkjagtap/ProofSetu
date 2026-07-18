@@ -24,6 +24,9 @@ class Settings:
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
+    # Regex for origins allowed in addition to CORS_ORIGINS. Defaults to any
+    # Vercel deployment so the frontend works without hard-coding its exact URL.
+    CORS_ORIGIN_REGEX: str = os.getenv("CORS_ORIGIN_REGEX", r"https://.*\.vercel\.app")
 
     MAX_UPLOAD_MB: int = int(os.getenv("MAX_UPLOAD_MB", "10"))
 

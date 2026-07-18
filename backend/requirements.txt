@@ -5,6 +5,10 @@ pydantic>=2.7
 python-multipart>=0.0.9
 fpdf2>=2.7
 
+# --- extraction (Member 2); folded in so CI + deploy install them ---
+Pillow>=10.0
+pytesseract>=0.3.10   # real OCR path; needs the Tesseract binary. Fixture path works without it.
+
 # --- dev / test ---
 pytest>=8.0
 httpx>=0.27
