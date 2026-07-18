@@ -18,11 +18,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import settings
 from backend.store.factory import get_store
 from backend.checklist.router import router as checklist_router
+from backend.guards.middleware import OutputGuardMiddleware
 
 log = logging.getLogger("realdoor")
 
 app = FastAPI(title="RealDoor API", version="0.1.0")
 
+# Output guard is inner; CORS is added last so it stays OUTERMOST — CORS headers
+# then appear on every response, including the guard's short-circuit refusals.
+app.add_middleware(OutputGuardMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
