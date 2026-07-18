@@ -42,11 +42,11 @@ _FIELD_LABELS: dict[str, tuple[str, ...]] = {
     "period_start": ("period start", "statement period", "from"),
     "period_end": ("period end", "to"),
     "ending_balance": ("ending balance", "balance"),
-    # government_id
-    "full_name": ("name",),
+    # government_id (multi-word labels first so the value excludes the label)
+    "full_name": ("full name", "name"),
     "date_of_birth": ("date of birth", "dob", "birth"),
-    "id_number_last4": ("id", "license", "number", "id no"),
-    "expiration_date": ("expiration", "expires", "exp"),
+    "id_number_last4": ("id number", "id no", "license number", "license", "number", "id"),
+    "expiration_date": ("expiration date", "expiration", "expires", "exp"),
 }
 
 # Tokens that identify a pay frequency regardless of a nearby label.
@@ -127,25 +127,25 @@ def _span_box(words: List[OcrWord]) -> Optional[SourceBox]:
 
 
 def _value_after_label(line: List[OcrWord], label_tokens: tuple[str, ...]):
-    """Return (value_str, confidence, box) for tokens following a label on a line."""
-    line_text = " ".join(w.text for w in line).lower()
+    """Return (value_str, confidence, box) for tokens following a label on a line.
+
+    Labels are matched on WHOLE words (a label of "id" will not match inside
+    "identification"), so the value never captures part of a label token.
+    """
+    # Normalized word view for whole-word label matching.
+    norm = [w.text.lower().strip(":.,") for w in line]
     for label in label_tokens:
-        idx = line_text.find(label)
-        if idx == -1:
-            continue
-        # Find how many words the label spans, then take the remainder as value.
-        label_word_count = len(label.split())
-        # Locate the first word index where the label begins.
-        for start in range(len(line)):
-            candidate = " ".join(w.text for w in line[start:]).lower()
-            if candidate.startswith(label):
-                value_words = line[start + label_word_count:]
-                value_words = [w for w in value_words if w.text.strip(":").strip()]
-                if not value_words:
-                    return None
-                value_str = " ".join(w.text for w in value_words).strip(": ").strip()
-                conf = sum(w.confidence for w in value_words) / len(value_words)
-                return value_str, conf, _span_box(value_words)
+        label_words = label.split()
+        span = len(label_words)
+        for start in range(0, len(line) - span + 1):
+            if norm[start:start + span] != label_words:
+                continue
+            value_words = [w for w in line[start + span:] if w.text.strip(":").strip()]
+            if not value_words:
+                continue  # label present but no value on this line; keep looking
+            value_str = " ".join(w.text for w in value_words).strip(": ").strip()
+            conf = sum(w.confidence for w in value_words) / len(value_words)
+            return value_str, conf, _span_box(value_words)
     return None
 
 
