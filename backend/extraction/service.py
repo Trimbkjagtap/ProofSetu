@@ -134,6 +134,20 @@ class ExtractionService:
     def get_document(self, document_id: str) -> ExtractionResponse | None:
         return self._docs.get(document_id)
 
+    def confirmed_fields(self, document_id: str) -> list[ExtractedField]:
+        """Return only renter-verified fields (confirmed or corrected).
+
+        Helper for Member 4's GET /profile, which returns the confirmed profile
+        only. Unconfirmed/please_check fields are excluded.
+        """
+        doc = self._docs.get(document_id)
+        if doc is None:
+            return []
+        return [
+            f for f in doc.fields
+            if f.state in (FieldState.confirmed, FieldState.corrected)
+        ]
+
     # -- content-free safety events --------------------------------------
     def _record_safety_event(self, document_id: str, event_type: str) -> None:
         # Store ONLY the document id and event type — never the offending text.

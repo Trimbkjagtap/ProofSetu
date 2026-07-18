@@ -5,6 +5,7 @@
 - **Endpoint(s) delivered:**
   - `POST /documents` — upload → validate → classify → extract allowlisted fields + confidence + source boxes.
   - `PATCH /documents/{doc_id}/fields` — confirm/correct a field; returns updated doc + `derivedStale` flag (Member 2 + 4 integration).
+  - `GET /extraction/features` — content-free field metadata (field, purpose, retention) for Member 4's canonical `/features` registry.
   - `GET /extraction/health` — module liveness.
 - **Document types supported:** all four — `pay_stub`, `government_id` (expired-ID demo), `benefit_letter`, `bank_statement`. Each has a deterministic fixture and a line-aware real-OCR mapping path.
 - **Synthetic demo assets:** `data/synthetic/{pay_stub,government_id,benefit_letter,bank_statement}_demo.png` (all fictional). Regenerate with `python -m backend.extraction.tools.make_synthetic`.
@@ -19,13 +20,19 @@
   ```bash
   pytest -q backend/extraction/tests
   ```
-  → **42 passed, 5 skipped** (skips are real-Tesseract tests that auto-run once the engine binary is installed). Covers MIME accept/reject, magic-byte content sniffing (renamed-exe rejection), low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints, line-aware mapping for all four document types, and end-to-end prompt-injection hardening.
+  → **49 passed, 5 skipped** (skips are real-Tesseract tests that auto-run once the engine binary is installed). Covers MIME accept/reject, magic-byte content sniffing (renamed-exe rejection), low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints, line-aware mapping for all four document types, and end-to-end prompt-injection hardening.
 - **Fixture/fallback behavior:** Fixture-first. With `OCR_PROVIDER=fixture` (default) — or if a real provider raises — the service returns deterministic synthetic fields with pre-recorded source boxes. `textract` is **not** wired tonight and falls back to fixture; `tesseract` works for images (PDF rasterization not wired → fixture fallback).
 - **Safety events (for Member 4 audit/output guard):** `service.safety_events()` returns a content-free list of `{"documentId", "type"}` (`prompt_injection`, `suspicious_field_value`) — no document text is ever stored. `service.injection_detected(doc_id)` is a convenience check. Not part of the frozen extraction contract; consume server-side only.
 - **Known limitations:**
   - Real-OCR field mapping (`mapper.py`) is conservative and intended for images; the fixture remains the reliable demo path.
   - PATCH uses an in-memory doc store (dev fallback). Real session-scoped persistence is Member 4's `store/` adapter.
   - `derivedStale` is an extra key on the PATCH response only (not on the frozen extraction contract) to signal downstream recompute; drop or relocate if the team prefers.
+
+## Helpers for Member 4 integration
+- **Feature registry:** `from backend.extraction.features import feature_registry` → list of `{documentType, field, purpose, retention}` for every allowlisted field. Merge into the canonical `GET /features`. Content-free (no values/PII).
+- **Confirmed profile:** `service.confirmed_fields(doc_id)` → only `confirmed`/`corrected` fields, for `GET /profile` ("confirmed profile only").
+- **Staleness:** `service.is_stale(doc_id)` → True after a confirm/correct so Member 3's calculations recompute.
+- **Safety events:** `service.safety_events()` / `service.injection_detected(doc_id)` → content-free audit signals.
 
 ## Exact steps Member 4 must perform to integrate
 1. **Mount the router** in `backend/main.py` (do not edit anything else in this module):

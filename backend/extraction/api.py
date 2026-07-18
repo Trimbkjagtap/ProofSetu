@@ -13,6 +13,7 @@ from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
 
 from .errors import ExtractionError
+from .features import feature_registry
 from .schemas import FieldCorrection
 from .service import service
 
@@ -22,6 +23,12 @@ router = APIRouter(tags=["extraction"])
 @router.get("/extraction/health")
 def health() -> dict:
     return {"status": "ok", "module": "extraction"}
+
+
+@router.get("/extraction/features")
+def features() -> dict:
+    """Extraction's content-free field metadata for Member 4's /features registry."""
+    return {"features": feature_registry()}
 
 
 @router.post("/documents")
