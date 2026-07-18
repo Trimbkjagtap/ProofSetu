@@ -31,3 +31,10 @@ class FileTooLargeError(ExtractionError):
 class EmptyFileError(ExtractionError):
     def __init__(self, message: str) -> None:
         super().__init__("empty_file", message, status_code=422)
+
+
+class ContentMismatchError(ExtractionError):
+    """File contents do not match a supported type (e.g. a renamed executable)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__("content_mismatch", message, status_code=415)

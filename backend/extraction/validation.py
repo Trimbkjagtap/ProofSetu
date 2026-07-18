@@ -6,7 +6,12 @@ from __future__ import annotations
 
 import os
 
-from .errors import EmptyFileError, FileTooLargeError, UnsupportedMediaTypeError
+from .errors import (
+    ContentMismatchError,
+    EmptyFileError,
+    FileTooLargeError,
+    UnsupportedMediaTypeError,
+)
 
 # Allowlisted upload types for the demo.
 ALLOWED_CONTENT_TYPES = {
@@ -15,6 +20,21 @@ ALLOWED_CONTENT_TYPES = {
     "image/png",
 }
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
+
+# Leading magic bytes for each supported type. Content is sniffed so a renamed
+# executable (or any spoofed extension/MIME) cannot slip through.
+_MAGIC_SIGNATURES: dict[str, tuple[bytes, ...]] = {
+    "pdf": (b"%PDF",),
+    "png": (b"\x89PNG",),
+    "jpeg": (b"\xff\xd8",),
+}
+
+
+def _sniff_kind(content: bytes) -> str | None:
+    for kind, signatures in _MAGIC_SIGNATURES.items():
+        if any(content.startswith(sig) for sig in signatures):
+            return kind
+    return None
 
 
 def max_upload_bytes() -> int:
@@ -56,4 +76,11 @@ def validate_upload(
     if not (mime_ok or ext_ok):
         raise UnsupportedMediaTypeError(
             "Unsupported file type. Upload a PDF, JPG, or PNG."
+        )
+
+    # Content sniffing: the actual bytes must look like a supported type. This
+    # catches a renamed executable or any spoofed extension/MIME.
+    if _sniff_kind(content) is None:
+        raise ContentMismatchError(
+            "File contents are not a valid PDF, JPG, or PNG."
         )
