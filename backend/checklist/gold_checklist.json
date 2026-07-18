@@ -1,0 +1,47 @@
+{
+  "program": "lihtc",
+  "ruleYear": 2026,
+  "items": [
+    {
+      "documentType": "pay_stub",
+      "label": "Recent pay stub",
+      "required": true,
+      "validity": { "recencyDays": 120, "expiringWarnDays": 30 }
+    },
+    {
+      "documentType": "government_id",
+      "label": "Photo identification",
+      "required": true,
+      "validity": { "mustNotBeExpired": true, "expiringWithinDays": 30 }
+    },
+    {
+      "documentType": "bank_statement",
+      "label": "Recent bank statement",
+      "required": true,
+      "validity": { "recencyDays": 120, "expiringWarnDays": 30 }
+    },
+    {
+      "documentType": "benefit_letter",
+      "label": "Benefit award letter",
+      "required": false,
+      "validity": { "recencyDays": 120, "expiringWarnDays": 30 }
+    }
+  ],
+  "displayOnly": [
+    {
+      "documentType": "tenant_income_certification",
+      "label": "Tenant Income Certification",
+      "required": true
+    },
+    {
+      "documentType": "student_status",
+      "label": "Student status certification",
+      "required": false
+    },
+    {
+      "documentType": "zero_income_certification",
+      "label": "Zero-income certification",
+      "required": false
+    }
+  ]
+}

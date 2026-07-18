@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "source": "2026 LIHTC Program Rule Corpus",
+    "ruleYear": 2026,
+    "effectiveDate": "2026-05-01",
+    "notice": "DEMO FIXTURE — frozen chunks authored from the supplied 2026 program pack. Not a live retrieval. No general web search."
+  },
+  "chunks": [
+    {
+      "chunk_id": "lihtc-2026-income-annualization",
+      "topic": "annualization",
+      "section": "Income annualization",
+      "source": "2026 LIHTC Program Rule Corpus",
+      "effective_date": "2026-05-01",
+      "rule_year": 2026,
+      "text": "Anticipated annual income is projected by annualizing current gross income. Monthly gross income is multiplied by 12. Income paid every two weeks is multiplied by 26; income paid twice monthly is multiplied by 24; weekly income is multiplied by 52. The result is the household's counted annual income for comparison to the applicable income limit."
+    },
+    {
+      "chunk_id": "lihtc-2026-required-documents",
+      "topic": "required_documents",
+      "section": "Required income documentation",
+      "source": "2026 LIHTC Program Rule Corpus",
+      "effective_date": "2026-05-01",
+      "rule_year": 2026,
+      "text": "Households must document each source of income. Earned income is supported by recent consecutive pay stubs. Benefit income is supported by a current award or benefit letter. A current bank statement documents assets when required. Identity is documented by an unexpired government-issued photo identification."
+    },
+    {
+      "chunk_id": "lihtc-2026-verification-recency",
+      "topic": "verification_recency",
+      "section": "Verification recency",
+      "source": "2026 LIHTC Program Rule Corpus",
+      "effective_date": "2026-05-01",
+      "rule_year": 2026,
+      "text": "Income and asset documentation is considered current when dated within 120 days of the certification. Documentation older than 120 days is not current and should be refreshed before certification. Identity documents must be unexpired on the certification date."
+    },
+    {
+      "chunk_id": "lihtc-2026-income-limit-comparison",
+      "topic": "income_limit_comparison",
+      "section": "Income limit comparison",
+      "source": "2026 LIHTC Program Rule Corpus",
+      "effective_date": "2026-05-01",
+      "rule_year": 2026,
+      "text": "Counted annual household income is compared to the applicable Multifamily Tax Subsidy Projects (MTSP) income limit for the household size and area median income percentage. The comparison reports the counted income, the limit, and the difference. It does not determine eligibility; a qualified human makes that decision."
+    }
+  ]
+}
