@@ -1,0 +1,7 @@
+# Member 3 (rules) dependencies.
+# Core calc + retrieval use only the Python standard library.
+# These are needed only when the router is mounted in the FastAPI app.
+fastapi>=0.110
+pydantic>=2.6
+# Tests use pytest (dev only).
+pytest>=8.0
