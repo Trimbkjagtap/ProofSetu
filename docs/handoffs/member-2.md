@@ -20,7 +20,7 @@
   ```bash
   pytest -q backend/extraction/tests
   ```
-  → **49 passed, 5 skipped** (skips are real-Tesseract tests that auto-run once the engine binary is installed). Covers MIME accept/reject, magic-byte content sniffing (renamed-exe rejection), low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints, line-aware mapping for all four document types, and end-to-end prompt-injection hardening.
+  → **68 passed, 5 skipped** (skips are real-Tesseract tests that auto-run once the engine binary is installed). Covers MIME accept/reject, magic-byte content sniffing (renamed-exe rejection), low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints, line-aware mapping for all four document types, and end-to-end prompt-injection hardening.
 - **Fixture/fallback behavior:** Fixture-first. With `OCR_PROVIDER=fixture` (default) — or if a real provider raises — the service returns deterministic synthetic fields with pre-recorded source boxes. `textract` is **not** wired tonight and falls back to fixture; `tesseract` works for images (PDF rasterization not wired → fixture fallback).
 - **Safety events (for Member 4 audit/output guard):** `service.safety_events()` returns a content-free list of `{"documentId", "type"}` (`prompt_injection`, `suspicious_field_value`) — no document text is ever stored. `service.injection_detected(doc_id)` is a convenience check. Not part of the frozen extraction contract; consume server-side only.
 - **Known limitations:**
@@ -29,6 +29,7 @@
   - `derivedStale` is an extra key on the PATCH response only (not on the frozen extraction contract) to signal downstream recompute; drop or relocate if the team prefers.
 
 ## Helpers for Member 4 integration
+- **Normalized values (for Members 3 & 4):** date fields are returned as ISO 8601 (`YYYY-MM-DD`) and `pay_frequency` as a canonical token (`weekly` | `biweekly` | `semimonthly` | `monthly` | `annually`). Unparseable values are kept as-is for the renter to correct. Amounts are numbers (currency symbols/commas stripped).
 - **Feature registry:** `from backend.extraction.features import feature_registry` → list of `{documentType, field, purpose, retention}` for every allowlisted field. Merge into the canonical `GET /features`. Content-free (no values/PII).
 - **Confirmed profile:** `service.confirmed_fields(doc_id)` → only `confirmed`/`corrected` fields, for `GET /profile` ("confirmed profile only").
 - **Staleness:** `service.is_stale(doc_id)` → True after a confirm/correct so Member 3's calculations recompute.

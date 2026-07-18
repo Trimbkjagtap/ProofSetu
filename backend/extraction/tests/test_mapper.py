@@ -56,7 +56,7 @@ def test_mapper_extracts_typed_paystub_values():
 
     assert fields["gross_pay"].value == 2450  # currency parsed to int
     assert fields["gross_pay"].state == FieldState.unconfirmed
-    assert fields["pay_frequency"].value == "Biweekly"
+    assert fields["pay_frequency"].value == "biweekly"  # normalized to canonical
     assert fields["pay_period_start"].value == "2026-04-01"
     assert fields["pay_period_end"].value == "2026-04-15"
     assert "Cambridge Community Services" in str(fields["employer_name"].value)

@@ -12,6 +12,7 @@ import re
 from typing import List, Optional
 
 from .allowlists import allowlisted_fields
+from .normalize import normalize_date, normalize_frequency
 from .ocr import OcrResult, OcrWord
 from .pii import last4
 from .schemas import DocumentType, ExtractedField, FieldState, SourceBox
@@ -20,6 +21,17 @@ CONFIDENCE_THRESHOLD = 0.5
 
 # Amount fields must parse to a number or they become please_check.
 _AMOUNT_FIELDS = {"gross_pay", "monthly_amount", "ending_balance"}
+
+# Date fields normalized to ISO 8601 when parseable.
+_DATE_FIELDS = {
+    "pay_period_start",
+    "pay_period_end",
+    "effective_date",
+    "expiration_date",
+    "period_start",
+    "period_end",
+    "date_of_birth",
+}
 
 # Label tokens that precede each allowlisted value on a document line.
 _FIELD_LABELS: dict[str, tuple[str, ...]] = {
@@ -81,6 +93,13 @@ def finalize_field(
 
     if name in _AMOUNT_FIELDS and value is not None and not isinstance(value, (int, float)):
         value = _to_number(str(value))
+
+    # Normalize dates to ISO 8601 and pay frequency to canonical vocabulary.
+    # If unparseable, keep the original value for the renter to confirm/correct.
+    if name in _DATE_FIELDS and isinstance(value, str):
+        value = normalize_date(value) or value
+    if name == "pay_frequency" and isinstance(value, str):
+        value = normalize_frequency(value) or value
 
     if value is None or value == "" or confidence < CONFIDENCE_THRESHOLD:
         state = FieldState.please_check
