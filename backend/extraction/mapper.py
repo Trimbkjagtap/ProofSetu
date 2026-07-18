@@ -30,18 +30,18 @@ _FIELD_LABELS: dict[str, tuple[str, ...]] = {
     "pay_period_end": ("period end", "pay period end", "end"),
     "gross_pay": ("gross pay", "gross"),
     "pay_frequency": ("frequency", "pay frequency"),
-    # benefit_letter
-    "issuer": ("issuer", "issued by", "from"),
+    # benefit_letter (avoid bare generic tokens that collide with titles)
+    "issuer": ("issuer", "issued by"),
     "recipient_name": ("recipient", "beneficiary"),
-    "benefit_type": ("benefit type", "benefit", "program"),
-    "monthly_amount": ("monthly amount", "monthly", "amount"),
-    "effective_date": ("effective",),
-    # bank_statement
-    "institution": ("institution", "bank"),
-    "account_holder": ("account holder", "holder", "account"),
-    "period_start": ("period start", "statement period", "from"),
-    "period_end": ("period end", "to"),
-    "ending_balance": ("ending balance", "balance"),
+    "benefit_type": ("benefit type",),
+    "monthly_amount": ("monthly amount", "benefit amount"),
+    "effective_date": ("effective date", "effective"),
+    # bank_statement (bare "bank"/"account"/"balance" would match the title line)
+    "institution": ("institution", "financial institution"),
+    "account_holder": ("account holder", "holder"),
+    "period_start": ("period start", "statement period"),
+    "period_end": ("period end",),
+    "ending_balance": ("ending balance", "current balance"),
     # government_id (multi-word labels first so the value excludes the label)
     "full_name": ("full name", "name"),
     "date_of_birth": ("date of birth", "dob", "birth"),

@@ -6,6 +6,8 @@
   - `POST /documents` — upload → validate → classify → extract allowlisted fields + confidence + source boxes.
   - `PATCH /documents/{doc_id}/fields` — confirm/correct a field; returns updated doc + `derivedStale` flag (Member 2 + 4 integration).
   - `GET /extraction/health` — module liveness.
+- **Document types supported:** all four — `pay_stub`, `government_id` (expired-ID demo), `benefit_letter`, `bank_statement`. Each has a deterministic fixture and a line-aware real-OCR mapping path.
+- **Synthetic demo assets:** `data/synthetic/{pay_stub,government_id,benefit_letter,bank_statement}_demo.png` (all fictional). Regenerate with `python -m backend.extraction.tools.make_synthetic`.
 - **Contract version consumed:** `contracts/extraction-response.json` (frozen v1). Response serialized with exact property names (`documentId`, `documentType`, `sourceBox`).
 - **Environment variable names (no values):** `OCR_PROVIDER` (`fixture`|`tesseract`|`textract`), `MAX_UPLOAD_MB`.
 - **Run command (from repo root):**
@@ -17,7 +19,7 @@
   ```bash
   pytest -q backend/extraction/tests
   ```
-  → **16 passed** (MIME accept/reject, low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints).
+  → **31 passed, 4 skipped** (skips are real-Tesseract tests that auto-run once the engine binary is installed). Covers MIME accept/reject, low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints, and line-aware mapping for all four document types.
 - **Fixture/fallback behavior:** Fixture-first. With `OCR_PROVIDER=fixture` (default) — or if a real provider raises — the service returns deterministic synthetic fields with pre-recorded source boxes. `textract` is **not** wired tonight and falls back to fixture; `tesseract` works for images (PDF rasterization not wired → fixture fallback).
 - **Known limitations:**
   - Real-OCR field mapping (`mapper.py`) is conservative and intended for images; the fixture remains the reliable demo path.

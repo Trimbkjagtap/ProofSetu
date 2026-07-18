@@ -34,6 +34,24 @@ _GOVERNMENT_ID_LINES = [
     ("Expiration Date", "2024-02-10"),
 ]
 
+_BENEFIT_LETTER_LINES = [
+    ("BENEFIT AWARD LETTER", ""),
+    ("Issuer", "State Benefits Office"),
+    ("Recipient", "Jordan Rivera"),
+    ("Benefit Type", "SNAP"),
+    ("Monthly Amount", "$480.00"),
+    ("Effective Date", "2026-01-01"),
+]
+
+_BANK_STATEMENT_LINES = [
+    ("BANK STATEMENT", ""),
+    ("Institution", "Riverbank Credit Union"),
+    ("Account Holder", "Jordan Rivera"),
+    ("Period Start", "2026-03-01"),
+    ("Period End", "2026-03-31"),
+    ("Ending Balance", "$1,875.00"),
+]
+
 
 def _font(size: int):
     for name in ("arial.ttf", "DejaVuSans.ttf", "LiberationSans-Regular.ttf"):
@@ -71,6 +89,8 @@ def main() -> None:
     for lines, name in (
         (_PAY_STUB_LINES, "pay_stub_demo.png"),
         (_GOVERNMENT_ID_LINES, "government_id_demo.png"),
+        (_BENEFIT_LETTER_LINES, "benefit_letter_demo.png"),
+        (_BANK_STATEMENT_LINES, "bank_statement_demo.png"),
     ):
         path = generate(lines, synthetic_dir / name)
         print(f"wrote {path}")
