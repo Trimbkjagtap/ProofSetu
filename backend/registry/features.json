@@ -1,0 +1,28 @@
+{
+  "retention": {
+    "policy": "session",
+    "description": "Values are held only for your anonymous session and are deleted when you delete your session or it expires. Raw uploaded documents, full SSNs, and full government-ID numbers are never stored."
+  },
+  "deleteControl": { "method": "DELETE", "path": "/session/{sessionId}" },
+  "features": [
+    { "name": "employer_name", "documentType": "pay_stub", "purpose": "Identify the income source.", "retention": "session" },
+    { "name": "employee_name", "documentType": "pay_stub", "purpose": "Match income to the household member.", "retention": "session" },
+    { "name": "pay_period_start", "documentType": "pay_stub", "purpose": "Check the document is recent enough.", "retention": "session" },
+    { "name": "pay_period_end", "documentType": "pay_stub", "purpose": "Check the document is recent enough.", "retention": "session" },
+    { "name": "gross_pay", "documentType": "pay_stub", "purpose": "Annualize income for the frozen income-limit comparison.", "retention": "session" },
+    { "name": "pay_frequency", "documentType": "pay_stub", "purpose": "Choose the correct annualization multiplier.", "retention": "session" },
+    { "name": "issuer", "documentType": "benefit_letter", "purpose": "Identify the benefit source.", "retention": "session" },
+    { "name": "recipient_name", "documentType": "benefit_letter", "purpose": "Match the benefit to the household member.", "retention": "session" },
+    { "name": "benefit_type", "documentType": "benefit_letter", "purpose": "Describe the income source.", "retention": "session" },
+    { "name": "monthly_amount", "documentType": "benefit_letter", "purpose": "Include benefit income in the comparison.", "retention": "session" },
+    { "name": "effective_date", "documentType": "benefit_letter", "purpose": "Check the benefit letter is current.", "retention": "session" },
+    { "name": "institution", "documentType": "bank_statement", "purpose": "Identify the account.", "retention": "session" },
+    { "name": "account_holder", "documentType": "bank_statement", "purpose": "Match the account to the household member.", "retention": "session" },
+    { "name": "period_start", "documentType": "bank_statement", "purpose": "Check the statement is current.", "retention": "session" },
+    { "name": "period_end", "documentType": "bank_statement", "purpose": "Check the statement is current.", "retention": "session" },
+    { "name": "ending_balance", "documentType": "bank_statement", "purpose": "Document assets when required.", "retention": "session" },
+    { "name": "full_name", "documentType": "government_id", "purpose": "Confirm the identity document is present.", "retention": "session" },
+    { "name": "id_number_last4", "documentType": "government_id", "purpose": "Reference the ID without storing the full number.", "retention": "session; last 4 digits only" },
+    { "name": "expiration_date", "documentType": "government_id", "purpose": "Check the ID is not expired.", "retention": "session" }
+  ]
+}

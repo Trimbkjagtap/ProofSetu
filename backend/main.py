@@ -20,6 +20,9 @@ from backend.store.factory import get_store
 from backend.checklist.router import router as checklist_router
 from backend.packet.router import router as packet_router
 from backend.packet.store import packet_store
+from backend.registry.router import router as features_router
+from backend.profile.router import router as profile_router
+from backend.profile.store import profile_store
 from backend.guards.middleware import OutputGuardMiddleware
 
 log = logging.getLogger("realdoor")
@@ -43,6 +46,8 @@ store = get_store()
 # --- Member 4's own routers (always present on this branch) ---
 app.include_router(checklist_router)
 app.include_router(packet_router)
+app.include_router(features_router)
+app.include_router(profile_router)
 
 
 @app.get("/health")
@@ -71,7 +76,8 @@ def create_session() -> dict:
 def delete_session(session_id: str) -> dict:
     """Delete all data for a session (the renter's 'delete everything' control)."""
     deleted = store.delete_session(session_id)
-    packet_store.delete_by_session(session_id)  # flush any packets for this session
+    packet_store.delete_by_session(session_id)   # flush packets for this session
+    profile_store.delete_by_session(session_id)  # flush confirmed fields
     if not deleted:
         raise HTTPException(status_code=404, detail="Session not found or already deleted.")
     return {"status": "deleted", "sessionId": session_id}
