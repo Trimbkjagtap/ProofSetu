@@ -10,7 +10,8 @@
 - **Document types supported:** all four — `pay_stub`, `government_id` (expired-ID demo), `benefit_letter`, `bank_statement`. Each has a deterministic fixture and a line-aware real-OCR mapping path. Extracted field set (19) matches `registry/features.json` exactly; `government_id.date_of_birth` is intentionally NOT extracted (data minimization; not published in /features).
 - **Synthetic demo assets:** `data/synthetic/{pay_stub,government_id,benefit_letter,bank_statement}_demo.png` (all fictional). Regenerate with `python -m backend.extraction.tools.make_synthetic`.
 - **Contract version consumed:** `contracts/extraction-response.json` (frozen v1). Response serialized with exact property names (`documentId`, `documentType`, `sourceBox`).
-- **Environment variable names (no values):** `OCR_PROVIDER` (`fixture`|`tesseract`|`textract`), `MAX_UPLOAD_MB`.
+- **Environment variable names (no values):** `OCR_PROVIDER` (`fixture`|`tesseract`|`textract`), `MAX_UPLOAD_MB`, `VISION_PROVIDER` (`openai`|`gemini`|`fixture`), `OPENAI_API_KEY` (secret), `OPENAI_VISION_MODEL` (default `gpt-4o-mini`), `OPENAI_MAX_CALLS` (default `50`), `OPENAI_TIMEOUT_SECONDS` (default `30`).
+- **Vision extraction (OpenAI):** with `VISION_PROVIDER=openai` and `OPENAI_API_KEY` set, `POST /documents` reads real images **and PDFs** (rasterized via PyMuPDF — no system binaries, works on Render). Structured Outputs, temperature 0, allowlist-scoped prompt, document treated as untrusted data. Any failure (missing key / API error / invalid JSON / call-cap / timeout) falls back to the deterministic fixture. Default stays `fixture` (opt-in).
 - **Run command (from repo root):**
   ```bash
   pip install -r backend/extraction/requirements.txt
@@ -20,7 +21,7 @@
   ```bash
   pytest -q backend/extraction/tests
   ```
-  → **71 passed, 5 skipped** (skips are real-Tesseract tests that auto-run once the engine binary is installed). Covers MIME accept/reject, magic-byte content sniffing (renamed-exe rejection), low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints, line-aware mapping for all four document types, and end-to-end prompt-injection hardening.
+  → **80 passed, 6 skipped** (skips are real-Tesseract tests that auto-run once the engine binary is installed). Covers MIME accept/reject, magic-byte content sniffing (renamed-exe rejection), low-confidence→please_check, injection ignored, ID last-4 only, source box present, contract keys, no forbidden tokens, POST/PATCH endpoints, line-aware mapping for all four document types, and end-to-end prompt-injection hardening.
 - **Fixture/fallback behavior:** Fixture-first. With `OCR_PROVIDER=fixture` (default) — or if a real provider raises — the service returns deterministic synthetic fields with pre-recorded source boxes. `textract` is **not** wired tonight and falls back to fixture; `tesseract` works for images (PDF rasterization not wired → fixture fallback).
 - **Safety events (for Member 4 audit/output guard):** `service.safety_events()` returns a content-free list of `{"documentId", "type"}` (`prompt_injection`, `suspicious_field_value`) — no document text is ever stored. `service.injection_detected(doc_id)` is a convenience check. Not part of the frozen extraction contract; consume server-side only.
 - **Known limitations:**
@@ -42,7 +43,8 @@
    app.include_router(extraction_router)
    ```
    ✅ **Already done** — `main.py` mounts it via `_try_include("backend.extraction.api")`. Verified: `POST /documents` returns 201 in the assembled app.
-2. **Dependencies:** ✅ `backend/requirements.txt` already covers the core needs (`fastapi`, `python-multipart`, `pydantic`, `pytest`, `httpx`). Optional real-OCR deps (`pytesseract`, `Pillow`) are listed in `backend/extraction/requirements.txt`; add them only if you want the live Tesseract path (its tests skip cleanly otherwise).
+2. **Dependencies:** ✅ `backend/requirements.txt` already covers the core needs (`fastapi`, `python-multipart`, `pydantic`, `pytest`, `httpx`). **For the OpenAI vision + PDF path, fold `openai>=1.40` and `pymupdf>=1.24` into `backend/requirements.txt`** so CI/Render install them (they're in `backend/extraction/requirements.txt`). Optional Tesseract deps (`pytesseract`, `Pillow`) are only for the local OCR path. All extra-provider tests skip cleanly when deps/keys are absent.
+   - **Env vars to add** to `.env.example` + Render: `VISION_PROVIDER=openai`, `OPENAI_API_KEY` (**secret — Render dashboard only, never commit**), `OPENAI_VISION_MODEL=gpt-4o-mini`, `OPENAI_MAX_CALLS=50`, `OPENAI_TIMEOUT_SECONDS=30`.
 3. **CORS:** set real `CORS_ORIGINS`; the permissive CORS in `dev_app.py` is local-only and is **not** used in `main.py`.
 4. **PATCH → profile:** ✅ **Already wired.** `PATCH /documents/{doc_id}/fields` calls `profile_store.upsert_field(...)` when the document was uploaded with a `session_id`. Verified end-to-end: PATCH then `GET /profile?session_id=…` returns the corrected value. You can now remove the demo fallback in `profile/router.py`. (The `ExtractionService` doc store is still in-memory; swap it for the `store/` adapter if you want session-scoped persistence of unconfirmed docs too.)
 
