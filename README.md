@@ -53,35 +53,9 @@ eligibility. The design enforces this at multiple layers:
 
 ## 4. Architecture
 
-```mermaid
-flowchart TD
-    subgraph Client["Frontend · Next.js 14 on Vercel"]
-      UI[5 accessible screens<br/>mock/live API client]
-    end
-    subgraph API["Backend · FastAPI on Render (Python 3.12)"]
-      ROUTER[main.py — routing, CORS,<br/>OutputGuard middleware]
-      SESSION[Session store — in-memory + TTL]
-      EXTRACT[Extraction pipeline]
-      RULES[Rules engine — deterministic]
-      CHECK[Gold-checklist engine]
-      PACKET[Packet + PDF export]
-      REG[Feature registry / GET /features]
-      GUARDS[Guards — output / input / refusal / PII]
-    end
-    subgraph Ext["External AI + frozen data"]
-      OAI[OpenAI Vision<br/>gpt-4o-mini]
-      GV[Google Cloud Vision OCR]
-      CORPUS[(Frozen 2026 LIHTC corpus<br/>+ MTSP thresholds)]
-    end
-
-    UI -->|HTTPS / JSON| ROUTER
-    ROUTER --> GUARDS
-    ROUTER --> SESSION & EXTRACT & RULES & CHECK & PACKET & REG
-    EXTRACT -->|VISION_PROVIDER=openai| OAI
-    EXTRACT -->|OCR_PROVIDER=google| GV
-    RULES --> CORPUS
-    CHECK -->|confirmed profile| SESSION
-```
+<p align="center">
+  <img src="docs/architecture.svg" alt="ProofSetu system architecture: renter → Next.js frontend (Vercel) → FastAPI backend (Render) with safety middleware and deterministic modules → external OpenAI/Google Vision and a frozen 2026 rule corpus" width="100%">
+</p>
 
 **Principle:** the AI (OpenAI/Google Vision) is confined to *reading documents*. Rules, math,
 checklist, packet, guards, and session lifecycle are deterministic Python. The frontend never
