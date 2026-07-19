@@ -8,6 +8,8 @@ fpdf2>=2.7
 # --- extraction (Member 2); folded in so CI + deploy install them ---
 Pillow>=10.0
 pytesseract>=0.3.10   # real OCR path; needs the Tesseract binary. Fixture path works without it.
+openai>=1.40          # vision extraction (VISION_PROVIDER=openai); needs OPENAI_API_KEY
+pymupdf>=1.24         # PDF -> image rasterization for the vision path (no system deps)
 
 # --- dev / test ---
 pytest>=8.0
