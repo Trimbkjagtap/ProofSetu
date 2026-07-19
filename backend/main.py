@@ -68,7 +68,8 @@ def create_session() -> dict:
     return {
         "sessionId": session.id,
         "consent": session.consent,
-        "expiresAt": session.expires_at.isoformat(),
+        "expiresAt": int(session.expires_at.timestamp() * 1000),  # epoch ms for the frontend countdown
+        "expiresAtIso": session.expires_at.isoformat(),           # human-readable form
         "ttlSeconds": settings.SESSION_TTL_SECONDS,
     }
 

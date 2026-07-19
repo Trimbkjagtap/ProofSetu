@@ -12,7 +12,7 @@ def test_create_session_returns_id_and_ttl():
     assert body["sessionId"].startswith("sess_")
     assert body["consent"] is True
     assert body["ttlSeconds"] > 0
-    assert "expiresAt" in body
+    assert isinstance(body["expiresAt"], int) and body["expiresAt"] > 0  # epoch ms
 
 
 def test_delete_session_removes_it():
