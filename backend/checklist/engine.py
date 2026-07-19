@@ -113,6 +113,52 @@ def evaluate_checklist(
     return {"items": items}
 
 
+# Maps each allowlisted field name to the document type it belongs to, so a flat
+# confirmed profile can be turned into a documents-with-dates view.
+_FIELD_TO_DOCTYPE = {
+    "employer_name": "pay_stub", "employee_name": "pay_stub",
+    "pay_period_start": "pay_stub", "pay_period_end": "pay_stub",
+    "gross_pay": "pay_stub", "pay_frequency": "pay_stub",
+    "full_name": "government_id", "id_number_last4": "government_id",
+    "expiration_date": "government_id", "date_of_birth": "government_id",
+    "institution": "bank_statement", "account_holder": "bank_statement",
+    "period_start": "bank_statement", "period_end": "bank_statement",
+    "ending_balance": "bank_statement",
+    "issuer": "benefit_letter", "recipient_name": "benefit_letter",
+    "benefit_type": "benefit_letter", "monthly_amount": "benefit_letter",
+    "effective_date": "benefit_letter",
+}
+
+# The validity date each document type is judged by: (engine key, source field).
+_DOC_DATE = {
+    "government_id": ("expirationDate", "expiration_date"),
+    "pay_stub": ("documentDate", "pay_period_end"),
+    "bank_statement": ("documentDate", "period_end"),
+    "benefit_letter": ("effectiveDate", "effective_date"),
+}
+
+
+def profile_from_confirmed_fields(fields: list) -> dict:
+    """Turn a flat confirmed-profile field list into a documents-with-dates profile
+    the checklist can evaluate. A document type is present once any of its fields is
+    confirmed; its validity date is read from the relevant confirmed field.
+    """
+    by_name = {f.get("name"): f.get("value") for f in (fields or [])}
+    present_types = {
+        _FIELD_TO_DOCTYPE[f["name"]]
+        for f in (fields or [])
+        if f.get("name") in _FIELD_TO_DOCTYPE
+    }
+    documents = []
+    for doc_type in present_types:
+        doc = {"documentType": doc_type}
+        out_key, src_field = _DOC_DATE.get(doc_type, (None, None))
+        if out_key and by_name.get(src_field):
+            doc[out_key] = by_name[src_field]
+        documents.append(doc)
+    return {"documents": documents, "providedDisplayItems": []}
+
+
 def demo_profile(today: Optional[date] = None) -> dict:
     """A synthetic confirmed profile that reproduces the acceptance demo:
     a recent pay stub (present), an expired ID (expired), no bank statement
