@@ -116,7 +116,12 @@ class ExtractionService:
     ) -> ExtractionResponse:
         response = provider.extract(content, content_type or "", filename)
         doc_type = response.document_type
-        fields = filter_to_allowlist(doc_type, response.fields)  # defense in depth
+        # Dynamic mode: keep every field the provider returned (it already
+        # PII-redacts). Otherwise enforce the allowlist as defense in depth.
+        if os.getenv("EXTRACTION_MODE", "allowlist").strip().lower() == "dynamic":
+            fields = list(response.fields)
+        else:
+            fields = filter_to_allowlist(doc_type, response.fields)
 
         # Input guard: extracted values are untrusted data. Scan them; record a
         # content-free event and null anything injection-like (never trust it).
