@@ -15,6 +15,7 @@ import type {
   DocumentRecord,
   DocumentSource,
   ExtractedField,
+  FieldUpdate,
   RequestedType,
 } from "@/types/domain";
 import { apiClient, IS_MOCK } from "@/lib/api/client";
@@ -115,7 +116,9 @@ export function ProfileWorkspace() {
     localId: string
   ): Promise<void> {
     try {
-      const res = await apiClient.uploadDocument(file, requestedType);
+      const sessionId = state.session?.sessionId;
+      if (!sessionId) throw new Error("Your session is not available. Please start again.");
+      const res = await apiClient.uploadDocument(file, sessionId, requestedType);
       const record: DocumentRecord = {
         ...res,
         documentId: localId,
@@ -155,6 +158,13 @@ export function ProfileWorkspace() {
 
   async function handleFiles(incomingFiles: File[], source: DocumentSource) {
     setAddErrors([]);
+
+    if (!state.session?.sessionId) {
+      const message = "Your session is not available. Please start again.";
+      setAddErrors([message]);
+      announce(message, "assertive");
+      return;
+    }
 
     if (replaceId && incomingFiles.length > 1) {
       setAddErrors(["Choose one replacement document at a time."]);
@@ -240,6 +250,24 @@ export function ProfileWorkspace() {
     await handleFiles([file], doc.source);
   }
 
+  async function handleFieldUpdate(documentId: string, update: FieldUpdate) {
+    const doc = state.documents[documentId];
+    if (!doc) return;
+
+    // Undo is local because the backend exposes confirm/correct, not a reset action.
+    if (update.state === "unconfirmed" || !state.session?.sessionId) {
+      dispatch({ type: "UPDATE_FIELD", documentId, field: update });
+      return;
+    }
+
+    try {
+      await apiClient.updateDocumentField(doc.backendDocumentId ?? doc.documentId, update);
+      dispatch({ type: "UPDATE_FIELD", documentId, field: update });
+    } catch {
+      announce("We couldn’t save that change. Please try again.", "assertive");
+    }
+  }
+
   const allSettled = docs.length > 0 && docs.every(isDocumentSettled);
   const continueDisabled = !allSettled;
   const continueHelp =
@@ -264,7 +292,7 @@ export function ProfileWorkspace() {
         documentLabel={humanizeDocumentType(activeDoc.documentType)}
         file={files.current[activeDoc.documentId]}
         fileName={activeDoc.fileName}
-        pageCount={Math.max(1, ...activeDoc.fields.map((field) => field.sourceBox.page), 1)}
+        pageCount={Math.max(1, ...activeDoc.fields.map((field) => field.sourceBox?.page ?? 1), 1)}
         fields={originalFields}
       />
     ) : null;
@@ -330,13 +358,7 @@ export function ProfileWorkspace() {
               }
               isActive={activeField === field.name}
               onActivate={setActiveField}
-              onUpdate={(update) =>
-                dispatch({
-                  type: "UPDATE_FIELD",
-                  documentId: activeDoc.documentId,
-                  field: update,
-                })
-              }
+              onUpdate={(update) => void handleFieldUpdate(activeDoc.documentId, update)}
             />
           ))}
         </div>

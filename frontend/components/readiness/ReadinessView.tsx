@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight, ClipboardList, Info } from "lucide-react";
 import type { ChecklistItem, ChecklistStatus } from "@/types/domain";
 import { apiClient } from "@/lib/api/client";
+import { useApp } from "@/lib/state/AppContext";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
 import { ChecklistItem as ChecklistItemRow } from "./ChecklistItem";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -26,6 +27,7 @@ const GROUP_ORDER: { status: ChecklistStatus; heading: string }[] = [
  * DOCUMENTS, never the applicant — there is no score or percentage here.
  */
 export function ReadinessView() {
+  const { state } = useApp();
   const { announce } = useAnnounce();
   const [items, setItems] = useState<ChecklistItem[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,9 @@ export function ReadinessView() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.getChecklist();
+      const sessionId = state.session?.sessionId;
+      if (!sessionId) throw new Error("Your session is not available. Please start again.");
+      const res = await apiClient.getChecklist(sessionId);
       setItems(res.items);
       announce("Your document readiness checklist is ready.");
     } catch {
@@ -44,7 +48,7 @@ export function ReadinessView() {
     } finally {
       setLoading(false);
     }
-  }, [announce]);
+  }, [announce, state.session?.sessionId]);
 
   useEffect(() => {
     void load();

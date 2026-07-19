@@ -78,12 +78,12 @@ export function DocumentUploader({
           }}
           disabled={disabled || busy}
           className="sr-only"
-          aria-label="Choose documents to upload (PDF, Word, JPG, or PNG). You can select several at once."
+          aria-label="Choose documents to upload (PDF, JPG, or PNG). You can select several at once."
         />
       </label>
 
       <p className="mt-3 text-sm text-muted">
-        Accepted: PDF, Word (.doc, .docx), JPG, PNG · up to 15 MB each
+        Accepted: PDF, JPG, PNG · up to 15 MB each
       </p>
 
       {busy && (

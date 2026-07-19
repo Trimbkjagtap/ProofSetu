@@ -4,6 +4,8 @@ import { useId, useState } from "react";
 import { MessagesSquare, Search, ShieldQuestion, Info } from "lucide-react";
 import type { RulesResponse } from "@/types/domain";
 import { apiClient } from "@/lib/api/client";
+import { useApp } from "@/lib/state/AppContext";
+import { buildRulesQueryContext } from "@/lib/calculation";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -19,6 +21,7 @@ export function RulesQuery() {
   const [result, setResult] = useState<RulesResponse | null>(null);
   const inputId = useId();
   const { announce } = useAnnounce();
+  const { state, confirmedFields } = useApp();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,7 +31,12 @@ export function RulesQuery() {
     setResult(null);
     announce("Looking up the published rule.");
     try {
-      const res = await apiClient.queryRules(trimmed);
+      const sessionId = state.session?.sessionId;
+      if (!sessionId) throw new Error("Your session is not available. Please start again.");
+      const res = await apiClient.queryRules(
+        trimmed,
+        buildRulesQueryContext(confirmedFields, state.householdSize)
+      );
       setResult(res);
       announce(res.answer, res.abstained ? "assertive" : "polite");
     } finally {
