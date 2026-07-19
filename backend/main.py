@@ -11,6 +11,7 @@ automatically once their PRs merge into develop).
 """
 import importlib
 import logging
+import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,13 +52,21 @@ app.include_router(features_router)
 app.include_router(profile_router)
 
 
+# Bump this on notable deploys so /health confirms which build is actually live.
+BUILD = "2026-07-19-dynamic"
+
+
 @app.get("/health")
 def health() -> dict:
-    """Liveness check. Ping this to wake the server before a demo."""
+    """Liveness check + effective config (so we can verify what's deployed)."""
     return {
         "status": "ok",
         "service": "realdoor-backend",
+        "build": BUILD,
         "sessionBackend": settings.SESSION_BACKEND,
+        "visionProvider": os.getenv("VISION_PROVIDER", "fixture"),
+        "ocrProvider": os.getenv("OCR_PROVIDER", "fixture"),
+        "extractionMode": os.getenv("EXTRACTION_MODE", "allowlist"),
     }
 
 
