@@ -53,7 +53,7 @@ app.include_router(profile_router)
 
 
 # Bump this on notable deploys so /health confirms which build is actually live.
-BUILD = "2026-07-19-dynamic"
+BUILD = "2026-07-19-dynamic-fix"
 
 
 @app.get("/health")
