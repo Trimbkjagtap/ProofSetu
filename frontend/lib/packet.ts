@@ -30,7 +30,7 @@ export function buildMockPacketText(input: MockPacketInput): string {
   const rows: string[] = [];
 
   rows.push(line);
-  rows.push("ProofSetu — PROTOTYPE PACKET");
+  rows.push("ProofSetu: PROTOTYPE PACKET");
   rows.push("Prototype download generated from confirmed mock information.");
   rows.push("Not an official document. Does not determine eligibility.");
   rows.push(line);
@@ -72,7 +72,7 @@ export function buildMockPacketText(input: MockPacketInput): string {
   rows.push("-".repeat(60));
   rows.push(
     attention.length
-      ? attention.map((a) => `${a.label} — ${a.status}`).join("\n")
+      ? attention.map((a) => `${a.label}: ${a.status}`).join("\n")
       : "(None.)"
   );
   rows.push("");

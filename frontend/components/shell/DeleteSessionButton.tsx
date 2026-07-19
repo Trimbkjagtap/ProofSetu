@@ -63,7 +63,7 @@ export function DeleteSessionButton({ compact = false }: DeleteSessionButtonProp
         onConfirm={handleDelete}
         onCancel={() => !busy && setOpen(false)}
       >
-        This permanently removes your session information — every uploaded
+        This permanently removes your session information, including every uploaded
         document, confirmed detail, and document selection. You cannot undo this,
         and you will start over from the beginning.
       </ConfirmationDialog>

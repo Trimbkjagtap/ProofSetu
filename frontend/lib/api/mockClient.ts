@@ -4,11 +4,12 @@ import type {
   FieldUpdate,
   PacketResponse,
   ProfileResponse,
+  RequestedType,
   RulesResponse,
   SessionResponse,
 } from "@/types/domain";
 import type { ProofSetuApi } from "./types";
-import { extractionMock } from "@/mocks/extraction";
+import { mockExtractionFor } from "@/mocks/extractionByType";
 import { rulesMock, rulesRefusalMock } from "@/mocks/rules";
 import { checklistMock } from "@/mocks/checklist";
 import { packetMock } from "@/mocks/packet";
@@ -51,25 +52,31 @@ export const mockClient: ProofSetuApi = {
     return delay({ deleted: true as const });
   },
 
-  uploadDocument(_file: File): Promise<ExtractionResponse> {
-    return delay(extractionMock, 900);
+  uploadDocument(
+    _file: File,
+    requestedType: RequestedType = "auto"
+  ): Promise<ExtractionResponse> {
+    const id = `doc_${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
+    return delay(mockExtractionFor(requestedType, id), 900);
   },
 
   updateDocumentField(
     documentId: string,
     field: FieldUpdate
   ): Promise<ExtractionResponse> {
-    // Echo the update back into the extraction shape with the new state/value.
-    const updated: ExtractionResponse = {
-      ...extractionMock,
-      documentId,
-      fields: extractionMock.fields.map((f) =>
-        f.name === field.name
-          ? { ...f, value: field.value, state: field.state }
-          : f
-      ),
-    };
-    return delay(updated, 350);
+    // Echo the update back into a pay-stub-shaped response (field patched).
+    const base = mockExtractionFor("pay_stub", documentId);
+    return delay(
+      {
+        ...base,
+        fields: base.fields.map((f) =>
+          f.name === field.name
+            ? { ...f, value: field.value, state: field.state }
+            : f
+        ),
+      },
+      350
+    );
   },
 
   getProfile(): Promise<ProfileResponse> {

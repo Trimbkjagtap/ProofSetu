@@ -6,9 +6,9 @@ import { stepForPath, STEPS } from "@/lib/steps";
 import { useApp } from "@/lib/state/AppContext";
 import { Wordmark } from "./Wordmark";
 import { StepProgress } from "./StepProgress";
-import { HelpButton } from "./HelpButton";
-import { DeleteSessionButton } from "./DeleteSessionButton";
-import { PrivacyNotice } from "./PrivacyNotice";
+import { HeaderNav } from "./HeaderNav";
+import { Footer } from "./Footer";
+import { HelpAssistant } from "@/components/help/HelpAssistant";
 import { LiveRegion } from "@/components/ui/LiveRegion";
 
 /**
@@ -30,23 +30,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className={wrapperClass}>
-      <header className="sticky top-0 z-30 border-b border-line bg-paper/95 shadow-card backdrop-blur-sm">
-        <div className="mx-auto w-full max-w-5xl px-4 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      <header className="sticky top-0 z-30 border-b border-line bg-cream px-4 pb-4 pt-4">
+        <div className="mx-auto w-full max-w-shell rounded-[18px] border border-line bg-cream shadow-card backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
             <Wordmark />
-            <div className="flex items-center gap-2">
-              <HelpButton />
-              <DeleteSessionButton compact />
-            </div>
+            <HeaderNav />
           </div>
 
           {currentOrder > 0 && (
-            <div className="mt-4 border-t border-line pt-3">
-              <StepProgress currentOrder={currentOrder} />
-              <p className="mt-2 text-sm text-muted">
-                Step {currentOrder} of {STEPS.length}
-                {current ? ` · ${current.name}` : ""}
-              </p>
+            <div className="border-t border-line px-4 py-3 sm:px-5">
+              <div className="flex flex-col items-center gap-2">
+                <StepProgress currentOrder={currentOrder} />
+                <p className="text-sm text-muted">
+                  Step {currentOrder} of {STEPS.length}
+                  {current ? ` · ${current.name}` : ""}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -55,17 +54,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 focus-visible:outline-none sm:px-6"
+        className="mx-auto w-full max-w-shell flex-1 px-4 py-10 focus-visible:outline-none sm:px-6"
       >
         {children}
       </main>
 
-      <footer className="border-t border-line bg-paper/80">
-        <div className="mx-auto w-full max-w-5xl px-4 py-5">
-          <PrivacyNotice />
-        </div>
-      </footer>
+      <Footer />
 
+      <HelpAssistant />
       <LiveRegion />
     </div>
   );

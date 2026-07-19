@@ -9,8 +9,8 @@ export default function ReadinessPage() {
     <div className="page-enter">
       <PageHeader
         eyebrow="Step 4 of 5"
-        title="Let’s check your documents"
-        description="See what is ready and what still needs your attention."
+        title="See what’s ready and what needs attention"
+        description="A quick check of your documents before you prepare your packet."
       />
       <ReadinessView />
     </div>

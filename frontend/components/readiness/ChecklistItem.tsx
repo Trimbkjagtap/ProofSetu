@@ -13,6 +13,14 @@ const EXPLANATIONS: Record<ChecklistStatus, string> = {
   expired: "This document is on file, but it has expired.",
 };
 
+/** Distinct left-border accent per status (color plus the badge's icon + text). */
+const LEFT_BORDER: Record<ChecklistStatus, string> = {
+  present: "border-l-success",
+  missing: "border-l-muted",
+  expiring: "border-l-warning",
+  expired: "border-l-danger",
+};
+
 interface ChecklistItemProps {
   item: ChecklistItemType;
 }
@@ -25,11 +33,16 @@ export function ChecklistItem({ item }: ChecklistItemProps) {
   const needsFix = item.status !== "present";
 
   return (
-    <li className="rounded-card border border-line bg-paper p-4 shadow-card transition-shadow duration-150 hover:shadow-raised">
+    <li
+      className={[
+        "h-full rounded-card border border-l-4 border-line bg-paper p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-raised",
+        LEFT_BORDER[item.status],
+      ].join(" ")}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-serif text-base font-semibold text-forest-dark">
+            <h3 className="font-serif text-base font-semibold text-navy">
               {item.label}
             </h3>
             <span

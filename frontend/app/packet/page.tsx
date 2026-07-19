@@ -9,8 +9,8 @@ export default function PacketPage() {
     <div className="page-enter">
       <PageHeader
         eyebrow="Step 5 of 5"
-        title="Your review packet is ready"
-        description="Review everything before downloading your packet."
+        title="Your packet, ready for one final look"
+        description="Check the information and documents before downloading."
       />
       <PacketView />
     </div>
