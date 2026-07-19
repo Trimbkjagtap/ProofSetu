@@ -36,6 +36,7 @@ import { FieldCard } from "@/components/documents/FieldCard";
 import { Button } from "@/components/ui/Button";
 import { BottomNav } from "@/components/shell/BottomNav";
 import { BackButton } from "@/components/shell/BackButton";
+import { LanguageBridge } from "./LanguageBridge";
 
 const EXTRACTION_ERROR =
   "We couldn’t read this document. Try a clearer scan or enter the information yourself.";
@@ -405,6 +406,7 @@ export function ProfileWorkspace() {
   return (
     <div className="space-y-8">
       <HouseholdSizeSelector />
+      <LanguageBridge />
 
       {IS_MOCK && (
         <div className="flex items-start gap-2 rounded-card border border-clay/40 bg-blush p-3 text-sm text-plum">
