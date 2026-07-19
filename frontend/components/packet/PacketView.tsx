@@ -163,7 +163,19 @@ export function PacketView() {
         })),
         includedDocs.map((doc) => doc.backendDocumentId ?? doc.documentId)
       );
-      if (packet.packetId) await apiClient.downloadPacket(packet.packetId);
+      if (!IS_MOCK && packet.packetId) {
+        const { downloadUrl } = await apiClient.downloadPacket(packet.packetId);
+        // Actually trigger the browser download of the real PDF. The backend
+        // serves it with Content-Disposition: attachment, so a transient anchor
+        // downloads it without navigating the app away.
+        const anchor = document.createElement("a");
+        anchor.href = downloadUrl;
+        anchor.target = "_blank";
+        anchor.rel = "noopener";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      }
     } catch {
       announce("We couldn’t prepare your packet. Please try again.", "assertive");
       return;
