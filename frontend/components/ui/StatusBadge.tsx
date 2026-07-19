@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import type { ChecklistStatus, FieldState } from "@/types/domain";
 
-type Tone = "positive" | "neutral" | "warning" | "danger" | "info";
+type Tone = "positive" | "neutral" | "warning" | "danger" | "info" | "corrected";
 
 interface Visual {
   Icon: LucideIcon;
@@ -20,11 +20,17 @@ interface Visual {
 
 /** Every status carries an icon AND text — never color alone (WCAG 1.4.1). */
 const toneClasses: Record<Tone, string> = {
-  positive: "bg-sage text-forest-dark border-forest/30",
-  neutral: "bg-paper text-muted border-line",
-  info: "bg-paper text-citation border-citation/30",
-  warning: "bg-[#FBF3E0] text-warning border-warning/40",
-  danger: "bg-[#FCEBEA] text-danger border-danger/40",
+  // Confirmed → muted teal
+  positive: "bg-[#E4F1ED] text-[#215E52] border-success/45",
+  // Missing → gray
+  neutral: "bg-blush text-muted border-line",
+  // Informational (Extracted) → muted plum/clay
+  info: "bg-blush text-clay border-clay/35",
+  warning: "bg-[#FBEFD8] text-[#9A5B00] border-warning/50",
+  // Expired → red
+  danger: "bg-[#F8E4E3] text-danger border-danger/50",
+  // Corrected → amber (clearly distinct from teal Confirmed)
+  corrected: "bg-[#FBE8CE] text-[#9A5B00] border-warning/60",
 };
 
 const checklistVisual: Record<ChecklistStatus, Visual> = {
@@ -37,7 +43,7 @@ const checklistVisual: Record<ChecklistStatus, Visual> = {
 const fieldVisual: Record<FieldState, Visual> = {
   unconfirmed: { Icon: HelpCircle, label: "Extracted", tone: "info" },
   confirmed: { Icon: CheckCircle2, label: "Confirmed", tone: "positive" },
-  corrected: { Icon: PencilLine, label: "Corrected", tone: "warning" },
+  corrected: { Icon: PencilLine, label: "Corrected", tone: "corrected" },
   please_check: { Icon: AlertTriangle, label: "Please check", tone: "warning" },
 };
 

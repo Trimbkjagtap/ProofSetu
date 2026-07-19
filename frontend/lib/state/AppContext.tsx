@@ -12,8 +12,8 @@ import {
 } from "react";
 import type {
   ConfirmedProfileField,
-  DocumentType,
-  ExtractionResponse,
+  DocumentRecord,
+  ExtractedField,
   FieldUpdate,
   SessionResponse,
 } from "@/types/domain";
@@ -30,11 +30,11 @@ export interface AppState {
   session: SessionResponse | null;
   consented: boolean;
   householdSize: number;
-  /** Uploaded documents keyed by documentId, holding their extracted fields. */
-  documents: Record<string, ExtractionResponse>;
+  /** Documents keyed by documentId, holding extracted fields + safe metadata. */
+  documents: Record<string, DocumentRecord>;
   /** True when a confirmed value changed and the fit-check math is out of date. */
   calculationStale: boolean;
-  /** Packet inclusion toggles keyed by documentType. */
+  /** Packet inclusion toggles keyed by local document ID. */
   packetSelections: Record<string, boolean>;
   prefs: AccessibilityPrefs;
 }
@@ -53,10 +53,12 @@ export type AppAction =
   | { type: "SET_SESSION"; session: SessionResponse }
   | { type: "SET_CONSENT"; consented: boolean }
   | { type: "SET_HOUSEHOLD_SIZE"; size: number }
-  | { type: "UPSERT_DOCUMENT"; document: ExtractionResponse }
+  | { type: "UPSERT_DOCUMENT"; document: DocumentRecord }
+  | { type: "REMOVE_DOCUMENT"; documentId: string }
   | { type: "UPDATE_FIELD"; documentId: string; field: FieldUpdate }
+  | { type: "ADD_FIELD"; documentId: string; field: ExtractedField }
   | { type: "SET_CALCULATION_STALE"; stale: boolean }
-  | { type: "TOGGLE_PACKET_DOC"; documentType: DocumentType }
+  | { type: "TOGGLE_PACKET_DOC"; documentId: string }
   | { type: "SET_PREF"; key: keyof AccessibilityPrefs; value: boolean }
   | { type: "HYDRATE"; state: Partial<AppState> }
   | { type: "RESET" };
@@ -78,8 +80,35 @@ function reducer(state: AppState, action: AppAction): AppState {
     case "UPSERT_DOCUMENT":
       return {
         ...state,
-        documents: { ...state.documents, [action.document.documentId]: action.document },
+        documents: {
+          ...state.documents,
+          [action.document.documentId]: action.document,
+        },
       };
+
+    case "REMOVE_DOCUMENT": {
+      const next = { ...state.documents };
+      const nextSelections = { ...state.packetSelections };
+      delete next[action.documentId];
+      delete nextSelections[action.documentId];
+      return { ...state, documents: next, packetSelections: nextSelections };
+    }
+
+    case "ADD_FIELD": {
+      const doc = state.documents[action.documentId];
+      if (!doc) return state;
+      // Replace if a field with this name already exists, else append.
+      const exists = doc.fields.some((f) => f.name === action.field.name);
+      const fields = exists
+        ? doc.fields.map((f) =>
+            f.name === action.field.name ? action.field : f
+          )
+        : [...doc.fields, action.field];
+      return {
+        ...state,
+        documents: { ...state.documents, [action.documentId]: { ...doc, fields } },
+      };
+    }
 
     case "UPDATE_FIELD": {
       const doc = state.documents[action.documentId];
@@ -106,12 +135,12 @@ function reducer(state: AppState, action: AppAction): AppState {
       return { ...state, calculationStale: action.stale };
 
     case "TOGGLE_PACKET_DOC": {
-      const current = state.packetSelections[action.documentType] ?? true;
+      const current = state.packetSelections[action.documentId] ?? true;
       return {
         ...state,
         packetSelections: {
           ...state.packetSelections,
-          [action.documentType]: !current,
+          [action.documentId]: !current,
         },
       };
     }

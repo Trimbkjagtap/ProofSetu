@@ -22,13 +22,20 @@ html {
   /* Respect user zoom / text reflow; use a comfortable base size. */
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable;
+}
+
+html,
+body {
+  /* Prevent horizontal scrolling at every breakpoint. */
+  overflow-x: hidden;
 }
 
 body {
-  /* Warm cream → soft sage app gradient, fixed so it doesn't tile on scroll. */
-  background: linear-gradient(135deg, #faf7f0 0%, #f2f7f3 55%, #e7f1eb 100%);
+  /* Warm cream → blush app gradient, fixed so it doesn't tile on scroll. */
+  background: linear-gradient(145deg, #fffdf9 0%, #fff8f2 52%, #f5eff4 100%);
   background-attachment: fixed;
-  color: #16241e; /* ink */
+  color: #27232b; /* dark text */
   font-family: var(--font-sans);
   line-height: 1.55;
   min-height: 100vh;
@@ -41,14 +48,14 @@ h1,
 h2,
 h3 {
   font-family: var(--font-serif);
-  color: #123f35; /* deep forest green */
+  color: #292038; /* midnight plum */
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
 /* --- Visible, high-contrast focus indicator (WCAG 2.2 AA) --- */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 3px solid #315f7d; /* citation blue */
+  outline: 3px solid #a6534f; /* clay */
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -59,8 +66,8 @@ h3 {
   left: 0.5rem;
   top: -3rem;
   z-index: 100;
-  background: #0f352a;
-  color: #fffdf8;
+  background: #292038;
+  color: #ffffff;
   padding: 0.75rem 1rem;
   border-radius: 6px;
   transition: top 0.15s ease-in-out;
@@ -109,6 +116,56 @@ svg {
   animation: page-enter 180ms ease-out both;
 }
 
+/* Navigation links: animated underline that grows from the left on hover/focus. */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 2px;
+  width: 100%;
+  background: #a6534f; /* clay underline */
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* The mobile header menu drops below the header without covering the page. */
+@keyframes menu-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.menu-panel {
+  animation: menu-drop 140ms ease-out both;
+}
+
+/* Warm gradient focus ring for primary controls. */
+.focus-gradient:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px #a6534f,
+    0 0 0 7px rgba(215, 122, 87, 0.4);
+}
+
+/* Warm cream → blush background for help-assistant content. */
+.help-gradient {
+  background: linear-gradient(180deg, #fff9f2 0%, #f8eee9 100%);
+}
+
 /* --- Reduced motion support --- */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -118,6 +175,10 @@ svg {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .menu-panel {
+    animation: none;
   }
 }
 

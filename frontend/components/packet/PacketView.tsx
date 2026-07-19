@@ -1,18 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
   Download,
   FileText,
-  Lock,
+  PackageCheck,
   UserRound,
   Users,
 } from "lucide-react";
 import type {
   ChecklistItem,
-  DocumentType,
+  DocumentRecord,
   PacketResponse,
   RulesResponse,
 } from "@/types/domain";
@@ -23,6 +23,7 @@ import { humanizeDocumentType } from "@/lib/documents";
 import { formatFieldValue, humanizeFieldName } from "@/lib/format";
 import { buildCalculation, confirmedGrossPay } from "@/lib/calculation";
 import { buildMockPacketText, downloadTextFile } from "@/lib/packet";
+import { isDocumentSettled } from "@/lib/reviewStatus";
 import { CalculationBreakdown } from "@/components/rules/CalculationBreakdown";
 import { CitationCard } from "@/components/rules/CitationCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -40,15 +41,9 @@ interface PacketData {
   packet: PacketResponse;
   rules: RulesResponse;
   attention: ChecklistItem[];
-  /** Documents eligible for inclusion (present/ready — never expired or missing). */
-  includableDocuments: DocumentType[];
+  includableDocuments: DocumentRecord[];
 }
 
-/**
- * Loads and presents the review-ready packet: confirmed information, household
- * size, calculation + citation, document selection, and the missing/expired
- * summary. Only confirmed information is ever included.
- */
 export function PacketView() {
   const { state, dispatch, confirmedFields } = useApp();
   const { announce } = useAnnounce();
@@ -57,8 +52,13 @@ export function PacketView() {
   const [error, setError] = useState<string | null>(null);
   const [prepared, setPrepared] = useState(false);
 
-  // Confirmed renter name comes from the shared state, not a hardcoded value.
-  const nameField = confirmedFields.find((f) => f.name === "employee_name");
+  const NAME_FIELDS = [
+    "employee_name",
+    "full_name",
+    "recipient_name",
+    "account_holder",
+  ];
+  const nameField = confirmedFields.find((field) => NAME_FIELDS.includes(field.name));
   const renterName = nameField ? String(nameField.value) : "Not provided yet";
 
   const load = useCallback(async () => {
@@ -70,12 +70,9 @@ export function PacketView() {
         apiClient.queryRules(OVERVIEW_QUESTION),
         apiClient.getChecklist(),
       ]);
-      const attention = checklist.items.filter((i) => i.status !== "present");
-      // A document that needs attention (expired/missing/expiring) can't be
-      // included, so it never appears in both lists.
-      const attentionTypes = new Set(attention.map((i) => i.documentType));
-      const includableDocuments = packet.includedDocuments.filter(
-        (dt) => !attentionTypes.has(dt)
+      const attention = checklist.items.filter((item) => item.status !== "present");
+      const includableDocuments = Object.values(state.documents).filter(
+        (doc) => !doc.error && isDocumentSettled(doc)
       );
       setData({ packet, rules, attention, includableDocuments });
       announce("Your packet preview is ready.");
@@ -85,23 +82,59 @@ export function PacketView() {
     } finally {
       setLoading(false);
     }
-  }, [announce]);
+  }, [announce, state.documents]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  const includableDocuments = useMemo(
+    () => data?.includableDocuments ?? [],
+    [data]
+  );
+
+  const selectedDocumentIds = useMemo(
+    () =>
+      new Set(
+        includableDocuments
+          .filter((doc) => state.packetSelections[doc.documentId] ?? true)
+          .map((doc) => doc.documentId)
+      ),
+    [includableDocuments, state.packetSelections]
+  );
+
+  const selectedConfirmedFields = useMemo(
+    () => confirmedFields.filter((field) => selectedDocumentIds.has(field.documentId)),
+    [confirmedFields, selectedDocumentIds]
+  );
+
+  const conflictingFields = useMemo(
+    () =>
+      Object.entries(
+        selectedConfirmedFields.reduce<Record<string, Set<string>>>((acc, field) => {
+          acc[field.name] ??= new Set<string>();
+          acc[field.name].add(String(field.value).trim().toLowerCase());
+          return acc;
+        }, {})
+      )
+        .filter(([, values]) => values.size > 1)
+        .map(([name]) => humanizeFieldName(name)),
+    [selectedConfirmedFields]
+  );
+
   async function handleDownload(current: PacketData) {
     announce("Preparing your prototype packet download.");
-    // Keep the typed API call so the real backend PDF can replace this later.
     await apiClient.downloadPacket(current.packet.packetId);
 
-    const includedLabels = current.includableDocuments
-      .filter((dt) => state.packetSelections[dt] ?? true)
-      .map((dt) => humanizeDocumentType(dt));
+    const includedDocs = current.includableDocuments.filter((doc) =>
+      selectedDocumentIds.has(doc.documentId)
+    );
+    const includedLabels = includedDocs.map(
+      (doc) =>
+        `${humanizeDocumentType(doc.documentType)} · ${doc.fileName} · ${doc.source === "scan" ? "Scanned" : "Uploaded"}`
+    );
 
-    // Same confirmed-income-driven calculation shown on screen.
-    const monthly = confirmedGrossPay(confirmedFields);
+    const monthly = confirmedGrossPay(selectedConfirmedFields);
     const calculation =
       monthly === null
         ? current.rules.calculation
@@ -110,11 +143,14 @@ export function PacketView() {
     const text = buildMockPacketText({
       renterName,
       householdSize: state.householdSize,
-      confirmedFields,
+      confirmedFields: selectedConfirmedFields,
       calculation,
       citation: current.rules.citation,
       includedDocuments: includedLabels,
-      attention: current.attention.map((a) => ({ label: a.label, status: a.status })),
+      attention: current.attention.map((item) => ({
+        label: item.label,
+        status: item.status,
+      })),
     });
     downloadTextFile("ProofSetu-prototype-packet.txt", text);
 
@@ -132,11 +168,8 @@ export function PacketView() {
     );
   }
 
-  const { rules, attention, includableDocuments } = data;
-
-  // Calculation derived from the confirmed income in shared state (same as
-  // Fit Check), not from the raw mock — so the numbers always match.
-  const monthlyIncome = confirmedGrossPay(confirmedFields);
+  const { rules, attention } = data;
+  const monthlyIncome = confirmedGrossPay(selectedConfirmedFields);
   const calculation =
     monthlyIncome === null
       ? null
@@ -144,25 +177,32 @@ export function PacketView() {
 
   return (
     <div className="space-y-8">
-      {/* Confirmed-only assurance. */}
-      <div className="flex items-start gap-3 rounded-card border border-line bg-panel-gradient p-4 text-forest-dark shadow-card">
-        <Lock className="mt-0.5 h-5 w-5 shrink-0 text-emerald" aria-hidden="true" />
-        <p className="font-medium">Only information you confirmed will be included.</p>
+      <div className="overflow-hidden rounded-card bg-primary-gradient p-6 text-white shadow-raised">
+        <div className="flex items-start gap-3">
+          <PackageCheck className="mt-0.5 h-7 w-7 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="font-serif text-xl font-semibold">
+              Everything you confirmed is here
+            </p>
+            <p className="mt-1 text-white/85">
+              Review it once more, then download your packet when you’re ready.
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Confirmed renter information + household size */}
       <section
         aria-labelledby="confirmed-heading"
-        className="rounded-card border border-line bg-paper p-6 shadow-card"
+        className="rounded-card border border-t-4 border-line border-t-plum bg-paper p-6 shadow-card"
       >
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-forest" aria-hidden="true" />
+          <CheckCircle2 className="h-5 w-5 text-indigo" aria-hidden="true" />
           <h2 id="confirmed-heading" className="text-lg">
             Information you confirmed
           </h2>
         </div>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2">
           <div className="flex items-center gap-2 text-ink">
             <UserRound className="h-4 w-4 text-muted" aria-hidden="true" />
             <span className="font-medium">Renter name:</span>
@@ -177,27 +217,48 @@ export function PacketView() {
           </div>
         </div>
 
-        {confirmedFields.length > 0 ? (
-          <dl className="mt-4 divide-y divide-line">
-            {confirmedFields.map((f) => (
-              <div
-                key={`${f.documentId}-${f.name}`}
-                className="flex items-center justify-between gap-4 py-2"
-              >
-                <dt className="text-muted">{humanizeFieldName(f.name)}</dt>
-                <dd className="flex items-center gap-2 text-ink">
-                  <span className="font-medium">{formatFieldValue(f)}</span>
-                  <StatusBadge kind="field" status={f.state} />
-                </dd>
-              </div>
-            ))}
-          </dl>
+        {selectedConfirmedFields.length > 0 ? (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-line text-muted">
+                  <th scope="col" className="py-2 pr-4 font-medium">
+                    Detail
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-medium">
+                    Value
+                  </th>
+                  <th scope="col" className="py-2 font-medium">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedConfirmedFields.map((field) => (
+                  <tr
+                    key={`${field.documentId}-${field.name}`}
+                    className="border-b border-line/70"
+                  >
+                    <th scope="row" className="py-2.5 pr-4 font-normal text-muted">
+                      {humanizeFieldName(field.name)}
+                    </th>
+                    <td className="py-2.5 pr-4 font-medium text-ink">
+                      {formatFieldValue(field)}
+                    </td>
+                    <td className="py-2.5">
+                      <StatusBadge kind="field" status={field.state} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className="mt-4 text-muted">
             You haven’t confirmed any document details yet.{" "}
             <Link
               href="/profile"
-              className="text-forest underline underline-offset-4 hover:text-forest-dark"
+              className="text-indigo underline underline-offset-4 hover:text-navy"
             >
               Go back to your documents
             </Link>{" "}
@@ -206,7 +267,6 @@ export function PacketView() {
         )}
       </section>
 
-      {/* Calculation + citation */}
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         {calculation ? (
           <CalculationBreakdown calculation={calculation} />
@@ -228,7 +288,6 @@ export function PacketView() {
         <CitationCard citation={rules.citation} />
       </div>
 
-      {/* Included documents with include/remove checkboxes */}
       <section
         aria-labelledby="docs-heading"
         className="rounded-card border border-line bg-paper p-6 shadow-card"
@@ -240,30 +299,32 @@ export function PacketView() {
           </h2>
         </div>
         <p className="mt-1 text-muted">
-          Choose which documents go into your packet. Uncheck any you’d rather leave
-          out.
+          Choose which ready documents go into your packet. Failed or unreviewed
+          documents stay out until they’re fixed.
         </p>
         {includableDocuments.length > 0 ? (
           <ul className="mt-4 space-y-2">
-            {includableDocuments.map((docType: DocumentType) => {
-              const included = state.packetSelections[docType] ?? true;
+            {includableDocuments.map((doc) => {
+              const included = state.packetSelections[doc.documentId] ?? true;
               return (
-                <li key={docType}>
+                <li key={doc.documentId}>
                   <label className="flex min-h-[44px] items-center gap-3 rounded-card border border-line px-3 py-2">
                     <input
                       type="checkbox"
                       checked={included}
                       onChange={() => {
-                        dispatch({ type: "TOGGLE_PACKET_DOC", documentType: docType });
+                        dispatch({ type: "TOGGLE_PACKET_DOC", documentId: doc.documentId });
                         announce(
-                          `${humanizeDocumentType(docType)} ${
+                          `${humanizeDocumentType(doc.documentType)} ${
                             included ? "removed from" : "added to"
                           } your packet.`
                         );
                       }}
                       className="h-5 w-5 shrink-0 accent-forest"
                     />
-                    <span className="text-ink">{humanizeDocumentType(docType)}</span>
+                    <span className="text-ink">
+                      {humanizeDocumentType(doc.documentType)} · {doc.fileName}
+                    </span>
                     <span className="ml-auto text-sm text-muted">
                       {included ? "Included" : "Not included"}
                     </span>
@@ -280,7 +341,17 @@ export function PacketView() {
         )}
       </section>
 
-      {/* Missing / expired summary */}
+      {conflictingFields.length > 0 && (
+        <div
+          role="alert"
+          className="rounded-card border border-warning/50 bg-[#FBE8CE] p-4 text-sm text-[#9A5B00]"
+        >
+          We found different values for this information. Please choose the correct
+          one.
+          <div className="mt-2 font-medium">{conflictingFields.join(", ")}</div>
+        </div>
+      )}
+
       {attention.length > 0 && (
         <section
           aria-labelledby="attention-heading"
@@ -320,11 +391,14 @@ export function PacketView() {
         </div>
       )}
 
-      {/* Bottom navigation: Back to Readiness + packet actions. */}
       <BottomNav>
         <BackButton href="/readiness" />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button variant="primary" onClick={() => void handleDownload(data)}>
+          <Button
+            variant="primary"
+            onClick={() => void handleDownload(data)}
+            disabled={conflictingFields.length > 0}
+          >
             <Download className="h-4 w-4" aria-hidden="true" />
             Download packet
           </Button>
@@ -333,7 +407,7 @@ export function PacketView() {
       </BottomNav>
 
       <p className="text-sm text-muted">
-        Prototype download generated from confirmed mock information — not an
+        Prototype download generated from confirmed mock information. It is not an
         official document.
       </p>
       <p className="text-sm font-medium text-forest-dark">

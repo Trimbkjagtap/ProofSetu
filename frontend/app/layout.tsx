@@ -5,7 +5,7 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: {
-    default: "ProofSetu — application-readiness assistant",
+    default: "ProofSetu: application-readiness assistant",
     template: "%s · ProofSetu",
   },
   description:

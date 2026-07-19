@@ -6,84 +6,85 @@ interface CalculationBreakdownProps {
   calculation: RuleCalculation;
 }
 
-interface Row {
-  term: string;
-  value: string;
-  hint?: string;
-  /** Visually emphasize a headline figure — with weight, never a success color. */
-  emphasize?: boolean;
+function Chip({
+  main,
+  sub,
+  highlight = false,
+}: {
+  main: string;
+  sub: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={[
+        "flex min-w-[110px] flex-1 flex-col items-center rounded-card border px-4 py-3 text-center",
+        highlight
+          ? "border-transparent bg-primary-gradient text-white shadow-card"
+          : "border-line bg-white",
+      ].join(" ")}
+    >
+      <span className="text-xl font-semibold tabular-nums">{main}</span>
+      <span className={highlight ? "text-sm text-white/80" : "text-sm text-muted"}>
+        {sub}
+      </span>
+    </div>
+  );
+}
+
+function Operator({ symbol }: { symbol: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex shrink-0 items-center text-xl font-semibold text-muted"
+    >
+      {symbol}
+    </span>
+  );
 }
 
 /**
- * Deterministic income calculation, presented as neutral facts. Intentionally
- * avoids green/red or any pass/fail framing — it states figures, not a verdict.
+ * Horizontal visual calculation strip:
+ *   $2,650 monthly × 12 months = $31,800 annually
+ * Neutral facts only — no approval, rejection, score, or eligibility result.
  */
 export function CalculationBreakdown({ calculation }: CalculationBreakdownProps) {
-  const rows: Row[] = [
-    {
-      term: "Your confirmed monthly income",
-      value: formatCurrency(calculation.confirmedValue),
-      hint: "The value you confirmed on the previous step.",
-    },
-    {
-      term: "Calculation",
-      value: calculation.formula,
-      hint: "Monthly income annualized using the published program rule.",
-    },
-    {
-      term: "Annualized income",
-      value: formatCurrency(calculation.annualizedIncome),
-      emphasize: true,
-    },
-    {
-      term: "Published 2026 limit",
-      value: formatCurrency(calculation.threshold),
-      emphasize: true,
-    },
-    {
-      term: "Difference",
-      value: formatCurrency(calculation.difference),
-      hint: "The gap between the annualized income and the published limit. This is a figure, not a decision.",
-    },
-  ];
+  const months = Math.round(
+    calculation.annualizedIncome / calculation.confirmedValue
+  );
 
   return (
     <section
       aria-labelledby="calc-heading"
-      className="rounded-card border border-line bg-paper p-6 shadow-card"
+      className="rounded-card border border-t-4 border-line border-t-apricot bg-paper p-6 shadow-card"
     >
       <div className="flex items-center gap-2">
-        <Calculator className="h-5 w-5 text-forest" aria-hidden="true" />
+        <Calculator className="h-5 w-5 text-indigo" aria-hidden="true" />
         <h2 id="calc-heading" className="text-lg">
-          Income and the published limit
+          How the numbers were calculated
         </h2>
       </div>
 
-      <dl className="mt-4 divide-y divide-line">
-        {rows.map((row) => (
-          <div
-            key={row.term}
-            className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
-          >
-            <dt className="text-muted">
-              {row.term}
-              {row.hint && (
-                <span className="mt-0.5 block text-sm text-muted/80">
-                  {row.hint}
-                </span>
-              )}
-            </dt>
-            <dd
-              className={[
-                "shrink-0 tabular-nums text-ink",
-                row.emphasize ? "text-2xl font-semibold" : "text-lg font-medium",
-              ].join(" ")}
-            >
-              {row.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <p className="sr-only">
+        {formatCurrency(calculation.confirmedValue)} monthly times {months} months
+        equals {formatCurrency(calculation.annualizedIncome)} annually.
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-stretch gap-3">
+        <Chip main={formatCurrency(calculation.confirmedValue)} sub="monthly" />
+        <Operator symbol="×" />
+        <Chip main={String(months)} sub="months" />
+        <Operator symbol="=" />
+        <Chip
+          main={formatCurrency(calculation.annualizedIncome)}
+          sub="annually"
+          highlight
+        />
+      </div>
+
+      <p className="mt-4 text-sm text-muted">
+        This uses the income you confirmed and the published annualization rule.
+      </p>
     </section>
   );
 }

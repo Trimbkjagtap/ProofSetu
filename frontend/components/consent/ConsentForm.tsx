@@ -21,7 +21,7 @@ import { WhatWeUseDialog } from "./WhatWeUseDialog";
 const POINTS = [
   {
     Icon: FlaskConical,
-    text: "This prototype uses synthetic documents only — never your real personal information.",
+    text: "This prototype uses synthetic documents only, never your real personal information.",
   },
   {
     Icon: Clock3,

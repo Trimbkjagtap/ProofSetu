@@ -21,7 +21,7 @@ export function CitationCard({ citation }: CitationCardProps) {
   return (
     <aside
       aria-labelledby="citation-heading"
-      className="rounded-card border border-citation/30 bg-paper p-6 shadow-card"
+      className="rounded-card border border-t-4 border-line border-t-berry bg-blush p-6 shadow-card"
     >
       <div className="flex items-center gap-2 text-citation">
         <BookMarked className="h-5 w-5" aria-hidden="true" />

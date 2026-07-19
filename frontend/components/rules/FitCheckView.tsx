@@ -9,6 +9,7 @@ import { useApp } from "@/lib/state/AppContext";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
 import { buildCalculation, confirmedGrossPay } from "@/lib/calculation";
 import { CalculationBreakdown } from "./CalculationBreakdown";
+import { PublishedLimitCard } from "./PublishedLimitCard";
 import { CitationCard } from "./CitationCard";
 import { RulesQuery } from "./RulesQuery";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -95,30 +96,36 @@ export function FitCheckView() {
 
       {/* Grounded explanation (neutral). */}
       <div className="flex items-start gap-3 rounded-card border border-line bg-paper p-4 shadow-card">
-        <Info className="mt-0.5 h-5 w-5 shrink-0 text-forest" aria-hidden="true" />
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-indigo" aria-hidden="true" />
         <p className="text-ink">{data.answer}</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        {calculation ? (
+      {calculation ? (
+        <>
           <CalculationBreakdown calculation={calculation} />
-        ) : (
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+            <PublishedLimitCard calculation={calculation} />
+            <CitationCard citation={data.citation} />
+          </div>
+        </>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
           <div className="flex items-start gap-3 rounded-card border border-line bg-paper p-6 shadow-card">
-            <Info className="mt-0.5 h-5 w-5 shrink-0 text-forest" aria-hidden="true" />
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-indigo" aria-hidden="true" />
             <p className="text-ink">
               Confirm your income on the{" "}
               <Link
                 href="/profile"
-                className="text-forest underline underline-offset-4 hover:text-forest-dark"
+                className="text-indigo underline underline-offset-4 hover:text-navy"
               >
                 documents step
               </Link>{" "}
               to see the calculation.
             </p>
           </div>
-        )}
-        <CitationCard citation={data.citation} />
-      </div>
+          <CitationCard citation={data.citation} />
+        </div>
+      )}
 
       {/* Neutral disclaimer. */}
       <p className="rounded-card border border-line bg-panel-gradient p-4 text-muted">
