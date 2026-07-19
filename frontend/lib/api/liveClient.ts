@@ -12,7 +12,7 @@ import { ApiError, type ProofSetuApi } from "./types";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
-  "http://localhost:8000";
+  "https://proofsetu.onrender.com";
 
 async function request<T>(
   path: string,
