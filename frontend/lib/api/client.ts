@@ -8,9 +8,14 @@ import { liveClient } from "./liveClient";
  * live mode, for backward compatibility.
  */
 function resolveMode(): "mock" | "live" {
+  // Explicit opt-out to mock (for offline demos / local UI work).
+  if (process.env.NEXT_PUBLIC_API_MODE === "mock") return "mock";
+  if (process.env.NEXT_PUBLIC_USE_MOCKS === "true") return "mock";
+  // Explicit opt-in to live.
   if (process.env.NEXT_PUBLIC_API_MODE === "live") return "live";
   if (process.env.NEXT_PUBLIC_USE_MOCKS === "false") return "live";
-  return "mock";
+  // Default: live in deployed (production) builds, mock for local dev.
+  return process.env.NODE_ENV === "production" ? "live" : "mock";
 }
 
 export const API_MODE = resolveMode();
