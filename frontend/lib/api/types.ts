@@ -3,6 +3,7 @@ import type {
   ExtractionResponse,
   FieldUpdate,
   PacketResponse,
+  ProfileField,
   ProfileResponse,
   RequestedType,
   RulesResponse,
@@ -19,18 +20,33 @@ export interface ProofSetuApi {
   deleteSession(sessionId: string): Promise<{ deleted: true }>;
   uploadDocument(
     file: File,
+    sessionId: string,
     requestedType?: RequestedType
   ): Promise<ExtractionResponse>;
   updateDocumentField(
     documentId: string,
     field: FieldUpdate
-  ): Promise<ExtractionResponse>;
-  getProfile(): Promise<ProfileResponse>;
-  queryRules(question: string): Promise<RulesResponse>;
-  getChecklist(): Promise<ChecklistResponse>;
-  createPacket(): Promise<PacketResponse>;
+  ): Promise<ExtractionResponse | null>;
+  getProfile(sessionId: string): Promise<ProfileResponse>;
+  queryRules(question: string, context: RulesQueryInput): Promise<RulesResponse>;
+  getChecklist(sessionId: string): Promise<ChecklistResponse>;
+  createPacket(
+    sessionId: string,
+    fields: PacketFieldInput[],
+    includedDocuments: string[]
+  ): Promise<PacketResponse>;
   downloadPacket(packetId: string): Promise<{ downloadUrl: string }>;
 }
+
+export interface RulesQueryInput {
+  confirmedIncome: { amount: number; frequency: string } | null;
+  metro: string;
+  householdSize: number;
+  amiPct?: number;
+  year?: number;
+}
+
+export type PacketFieldInput = Pick<ProfileField, "name" | "value" | "state">;
 
 /** Raised for any transport-level failure so the UI can show a retry state. */
 export class ApiError extends Error {

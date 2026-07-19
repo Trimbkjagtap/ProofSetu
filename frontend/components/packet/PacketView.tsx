@@ -16,12 +16,16 @@ import type {
   PacketResponse,
   RulesResponse,
 } from "@/types/domain";
-import { apiClient } from "@/lib/api/client";
+import { apiClient, IS_MOCK } from "@/lib/api/client";
 import { useApp } from "@/lib/state/AppContext";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
 import { humanizeDocumentType } from "@/lib/documents";
 import { formatFieldValue, humanizeFieldName } from "@/lib/format";
-import { buildCalculation, confirmedGrossPay } from "@/lib/calculation";
+import {
+  buildCalculation,
+  buildRulesQueryContext,
+  confirmedGrossPay,
+} from "@/lib/calculation";
 import { buildMockPacketText, downloadTextFile } from "@/lib/packet";
 import { isDocumentSettled } from "@/lib/reviewStatus";
 import { CalculationBreakdown } from "@/components/rules/CalculationBreakdown";
@@ -65,16 +69,33 @@ export function PacketView() {
     setLoading(true);
     setError(null);
     try {
-      const [packet, rules, checklist] = await Promise.all([
-        apiClient.createPacket(),
-        apiClient.queryRules(OVERVIEW_QUESTION),
-        apiClient.getChecklist(),
-      ]);
-      const attention = checklist.items.filter((item) => item.status !== "present");
-      const includableDocuments = Object.values(state.documents).filter(
+      const sessionId = state.session?.sessionId;
+      if (!sessionId) throw new Error("Your session is not available. Please start again.");
+      const readyDocuments = Object.values(state.documents).filter(
         (doc) => !doc.error && isDocumentSettled(doc)
       );
-      setData({ packet, rules, attention, includableDocuments });
+      const selectedDocuments = readyDocuments;
+      const selectedFields = confirmedFields.filter((field) =>
+        selectedDocuments.some((doc) => doc.documentId === field.documentId)
+      );
+      const [packet, rules, checklist] = await Promise.all([
+        apiClient.createPacket(
+          sessionId,
+          selectedFields.map(({ name, value, state: fieldState }) => ({
+            name,
+            value,
+            state: fieldState,
+          })),
+          selectedDocuments.map((doc) => doc.backendDocumentId ?? doc.documentId)
+        ),
+        apiClient.queryRules(
+          OVERVIEW_QUESTION,
+          buildRulesQueryContext(confirmedFields, state.householdSize)
+        ),
+        apiClient.getChecklist(sessionId),
+      ]);
+      const attention = checklist.items.filter((item) => item.status !== "present");
+      setData({ packet, rules, attention, includableDocuments: readyDocuments });
       announce("Your packet preview is ready.");
     } catch {
       setError("We couldn’t prepare your packet. Please try again.");
@@ -82,7 +103,7 @@ export function PacketView() {
     } finally {
       setLoading(false);
     }
-  }, [announce, state.documents]);
+  }, [announce, confirmedFields, state.documents, state.householdSize, state.session?.sessionId]);
 
   useEffect(() => {
     void load();
@@ -123,12 +144,31 @@ export function PacketView() {
   );
 
   async function handleDownload(current: PacketData) {
-    announce("Preparing your prototype packet download.");
-    await apiClient.downloadPacket(current.packet.packetId);
-
     const includedDocs = current.includableDocuments.filter((doc) =>
       selectedDocumentIds.has(doc.documentId)
     );
+    const sessionId = state.session?.sessionId;
+    if (!sessionId) {
+      announce("Your session is not available. Please start again.", "assertive");
+      return;
+    }
+    let packet: PacketResponse;
+    try {
+      packet = await apiClient.createPacket(
+        sessionId,
+        selectedConfirmedFields.map(({ name, value, state: fieldState }) => ({
+          name,
+          value,
+          state: fieldState,
+        })),
+        includedDocs.map((doc) => doc.backendDocumentId ?? doc.documentId)
+      );
+      if (packet.packetId) await apiClient.downloadPacket(packet.packetId);
+    } catch {
+      announce("We couldn’t prepare your packet. Please try again.", "assertive");
+      return;
+    }
+    announce(IS_MOCK ? "Preparing your prototype packet download." : "Your packet is ready.");
     const includedLabels = includedDocs.map(
       (doc) =>
         `${humanizeDocumentType(doc.documentType)} · ${doc.fileName} · ${doc.source === "scan" ? "Scanned" : "Uploaded"}`
@@ -136,8 +176,8 @@ export function PacketView() {
 
     const monthly = confirmedGrossPay(selectedConfirmedFields);
     const calculation =
-      monthly === null
-        ? current.rules.calculation
+      monthly === null || current.rules.calculation === null
+        ? null
         : buildCalculation(monthly, current.rules.calculation.threshold);
 
     const text = buildMockPacketText({
@@ -152,10 +192,14 @@ export function PacketView() {
         status: item.status,
       })),
     });
-    downloadTextFile("ProofSetu-prototype-packet.txt", text);
+    if (IS_MOCK) downloadTextFile("ProofSetu-prototype-packet.txt", text);
 
     setPrepared(true);
-    announce("Prototype packet downloaded from your confirmed information.");
+    announce(
+      IS_MOCK
+        ? "Prototype packet downloaded from your confirmed information."
+        : "Packet prepared from your confirmed information."
+    );
   }
 
   if (loading) return <LoadingState label="Preparing your packet…" />;
@@ -171,7 +215,7 @@ export function PacketView() {
   const { rules, attention } = data;
   const monthlyIncome = confirmedGrossPay(selectedConfirmedFields);
   const calculation =
-    monthlyIncome === null
+    monthlyIncome === null || rules.calculation === null
       ? null
       : buildCalculation(monthlyIncome, rules.calculation.threshold);
 
@@ -285,7 +329,7 @@ export function PacketView() {
             </p>
           </div>
         )}
-        <CitationCard citation={rules.citation} />
+        {rules.citation && <CitationCard citation={rules.citation} />}
       </div>
 
       <section
@@ -378,7 +422,7 @@ export function PacketView() {
         </section>
       )}
 
-      {prepared && (
+      {prepared && IS_MOCK && (
         <div
           role="status"
           className="flex items-start gap-2 rounded-card border border-forest/30 bg-sage p-4 text-forest-dark"
@@ -406,10 +450,12 @@ export function PacketView() {
         </div>
       </BottomNav>
 
-      <p className="text-sm text-muted">
-        Prototype download generated from confirmed mock information. It is not an
-        official document.
-      </p>
+      {IS_MOCK && (
+        <p className="text-sm text-muted">
+          Prototype download generated from confirmed mock information. It is not an
+          official document.
+        </p>
+      )}
       <p className="text-sm font-medium text-forest-dark">
         ProofSetu helps prepare your information. A housing professional makes the
         final decision.

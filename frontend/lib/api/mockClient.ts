@@ -54,6 +54,7 @@ export const mockClient: ProofSetuApi = {
 
   uploadDocument(
     _file: File,
+    _sessionId: string,
     requestedType: RequestedType = "auto"
   ): Promise<ExtractionResponse> {
     const id = `doc_${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
@@ -79,19 +80,23 @@ export const mockClient: ProofSetuApi = {
     );
   },
 
-  getProfile(): Promise<ProfileResponse> {
+  getProfile(_sessionId: string): Promise<ProfileResponse> {
     return delay(profileMock);
   },
 
-  queryRules(question: string): Promise<RulesResponse> {
+  queryRules(question: string, _context): Promise<RulesResponse> {
     return delay(isVerdictQuestion(question) ? rulesRefusalMock : rulesMock, 700);
   },
 
-  getChecklist(): Promise<ChecklistResponse> {
+  getChecklist(_sessionId: string): Promise<ChecklistResponse> {
     return delay(checklistMock);
   },
 
-  createPacket(): Promise<PacketResponse> {
+  createPacket(
+    _sessionId: string,
+    _fields,
+    _includedDocuments
+  ): Promise<PacketResponse> {
     return delay(packetMock, 700);
   },
 

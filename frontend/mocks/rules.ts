@@ -31,8 +31,8 @@ export const rulesMock: RulesResponse = {
 export const rulesRefusalMock: RulesResponse = {
   answer:
     "ProofSetu cannot determine eligibility. It can show your confirmed information, the published rule, and the calculation. A qualified housing professional makes the final decision.",
-  calculation: rulesMock.calculation,
-  citation: rulesMock.citation,
+  calculation: null,
+  citation: null,
   abstained: true,
   disclaimer: "This comparison does not determine eligibility.",
 };

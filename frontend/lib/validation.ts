@@ -1,6 +1,6 @@
 import { ACCEPTED_MIME, DOCUMENT_LIMITS, MAX_MB } from "./config";
 
-const ACCEPTED_EXT = /\.(pdf|docx?|jpe?g|png)$/i;
+const ACCEPTED_EXT = /\.(pdf|jpe?g|png)$/i;
 
 /** A stable signature for duplicate detection (name + size). */
 export function fileSignature(name: string, size: number): string {
@@ -24,7 +24,7 @@ export function validateFile(
   // Only reject on MIME when the browser provided one and it's clearly wrong.
   const mimeOk = !file.type || ACCEPTED_MIME.includes(file.type);
   if (!extOk || !mimeOk) {
-    return "This file type isn’t supported. Add a PDF, Word document, JPG or PNG.";
+    return "This file type isn’t supported. Add a PDF, JPG or PNG.";
   }
   if (file.size === 0) {
     return "That file looks empty. Please choose a different file.";

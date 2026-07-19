@@ -5,6 +5,8 @@ import type { PacketResponse } from "@/types/domain";
  * Only confirmed information is ever included.
  */
 export const packetMock: PacketResponse = {
+  sessionId: "sess_local_demo",
+  fields: [],
   packetId: "packet_001",
   status: "ready_for_preview",
   includedDocuments: ["pay_stub", "government_id"],
