@@ -31,16 +31,28 @@ from .schemas import (
     FieldState,
 )
 from .validation import validate_upload
+from .vision import OpenAIVisionProvider, VisionError
 
 logger = logging.getLogger("extraction")
 
 
 class ExtractionService:
-    def __init__(self, ocr_provider_name: str | None = None, ocr_provider=None) -> None:
+    def __init__(
+        self,
+        ocr_provider_name: str | None = None,
+        ocr_provider=None,
+        vision_provider_name: str | None = None,
+        vision_provider=None,
+    ) -> None:
         self._ocr_provider_name = ocr_provider_name or os.getenv("OCR_PROVIDER", "fixture")
         # Optional injected provider (used by tests to exercise the OCR path
         # without the Tesseract binary). Overrides OCR_PROVIDER when set.
         self._ocr_provider_override = ocr_provider
+        # Vision (OpenAI) provider: opt-in via VISION_PROVIDER=openai. Default
+        # stays fixture. An injected instance overrides env selection (tests).
+        self._vision_provider_name = vision_provider_name or os.getenv("VISION_PROVIDER", "fixture")
+        self._vision_provider_override = vision_provider
+        self._vision_provider = None  # lazily built singleton (holds call cap)
         # In-memory doc store for the dev/integration PATCH flow. Session-scoped
         # persistence is Member 4's store adapter; this is a local fallback only.
         self._docs: Dict[str, ExtractionResponse] = {}
@@ -64,21 +76,65 @@ class ExtractionService:
         document_id = f"doc_{uuid.uuid4().hex[:8]}"
         if session_id:
             self._doc_session[document_id] = session_id
-        provider = self._ocr_provider_override or get_ocr_provider(self._ocr_provider_name)
 
-        if provider is None:
-            response = self._extract_via_fixture(filename, document_id)
-        else:
+        vision = self._select_vision_provider()
+        if vision is not None:
             try:
-                response = self._extract_via_ocr(provider, filename, content, content_type, document_id)
-            except OcrUnavailable:
-                # Graceful OCR error -> deterministic fixture fallback.
-                logger.warning("ocr_unavailable provider=%s doc=%s (using fixture)", provider.name, document_id)
+                response = self._extract_via_vision(vision, filename, content, content_type, document_id)
+            except (VisionError, OcrUnavailable):
+                # Missing key / API error / invalid JSON / cap exceeded -> fixture.
+                logger.warning("vision_unavailable doc=%s (using fixture)", document_id)
                 response = self._extract_via_fixture(filename, document_id)
+        else:
+            provider = self._ocr_provider_override or get_ocr_provider(self._ocr_provider_name)
+            if provider is None:
+                response = self._extract_via_fixture(filename, document_id)
+            else:
+                try:
+                    response = self._extract_via_ocr(provider, filename, content, content_type, document_id)
+                except OcrUnavailable:
+                    # Graceful OCR error -> deterministic fixture fallback.
+                    logger.warning("ocr_unavailable provider=%s doc=%s (using fixture)", provider.name, document_id)
+                    response = self._extract_via_fixture(filename, document_id)
 
         self._docs[document_id] = response
         self._stale[document_id] = False
         return response
+
+    def _select_vision_provider(self):
+        """Return a vision provider when opted in with a key, else None."""
+        if self._vision_provider_override is not None:
+            return self._vision_provider_override
+        if self._vision_provider_name.strip().lower() == "openai" and os.getenv("OPENAI_API_KEY"):
+            if self._vision_provider is None:
+                self._vision_provider = OpenAIVisionProvider()
+            return self._vision_provider
+        return None
+
+    def _extract_via_vision(
+        self, provider, filename, content, content_type, document_id
+    ) -> ExtractionResponse:
+        response = provider.extract(content, content_type or "", filename)
+        doc_type = response.document_type
+        fields = filter_to_allowlist(doc_type, response.fields)  # defense in depth
+
+        # Input guard: extracted values are untrusted data. Scan them; record a
+        # content-free event and null anything injection-like (never trust it).
+        combined = " ".join(str(f.value) for f in fields if isinstance(f.value, str))
+        if detect_injection(combined):
+            self._record_safety_event(document_id, "prompt_injection")
+        for f in fields:
+            if isinstance(f.value, str) and detect_injection(f.value):
+                f.value = None
+                f.state = FieldState.please_check
+                self._record_safety_event(document_id, "suspicious_field_value")
+
+        return ExtractionResponse(
+            document_id=document_id,
+            document_type=doc_type,
+            status=DocumentStatus.needs_confirmation,
+            fields=fields,
+        )
 
     def _extract_via_fixture(self, filename: str | None, document_id: str) -> ExtractionResponse:
         doc_type = classify(filename, None)
