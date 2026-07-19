@@ -92,7 +92,12 @@ export function useSpeechRecognition({
 
   const start = useCallback(() => {
     const Constructor = getSpeechRecognitionConstructor();
-    if (!Constructor || recognitionRef.current) return;
+    if (!Constructor) {
+      setError("Speech recognition is not supported in this browser. You can type instead.");
+      setStatus("stopped");
+      return;
+    }
+    if (recognitionRef.current) return;
 
     const recognition = new Constructor();
     recognition.lang = language;

@@ -1,9 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Send, Trash2, X } from "lucide-react";
+import { Mic, MicOff, Send, Speaker, Square, Trash2, X } from "lucide-react";
 import { useFocusTrap } from "@/lib/a11y/useFocusTrap";
+import {
+  useSpeechRecognition,
+  type SpeechLanguage,
+  type SpeechStatus,
+} from "@/lib/a11y/useSpeechRecognition";
 import { BotFace } from "./BotFace";
 import {
   answerFor,
@@ -21,9 +26,54 @@ export function HelpAssistant() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [speechLanguage, setSpeechLanguage] = useState<SpeechLanguage>("en-US");
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const panelRef = useFocusTrap<HTMLDivElement>(open, () => setOpen(false));
+  const wasOpen = useRef(false);
 
   const questions = useMemo(() => questionsForPath(pathname), [pathname]);
+
+  const stopSpeaking = useCallback(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeakingIndex(null);
+  }, []);
+
+  const onSpeechTranscript = useCallback(
+    (transcript: string, isFinal: boolean) => {
+      setInput(transcript);
+      if (!isFinal) return;
+
+      // Let the shared hook expose its Processing state while the final
+      // transcript is committed to the editable input.
+      return new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 160);
+      });
+    },
+    []
+  );
+
+  const speech = useSpeechRecognition({
+    language: speechLanguage,
+    onTranscript: onSpeechTranscript,
+  });
+  const stopSpeech = speech.stop;
+
+  useEffect(() => {
+    if (wasOpen.current && !open) {
+      stopSpeech();
+      stopSpeaking();
+    }
+    wasOpen.current = open;
+  }, [open, stopSpeech, stopSpeaking]);
+
+  useEffect(() => stopSpeaking, [stopSpeaking]);
+
+  function handleSpeechLanguageChange(nextLanguage: SpeechLanguage) {
+    stopSpeech();
+    setSpeechLanguage(nextLanguage);
+  }
 
   function ask(question: string) {
     const q = question.trim();
@@ -38,9 +88,36 @@ export function HelpAssistant() {
   function onSend(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim()) return;
+    stopSpeech();
     ask(input);
     setInput("");
   }
+
+  function readAloud(index: number, text: string) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (speakingIndex === index) {
+      stopSpeaking();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.onend = () => setSpeakingIndex(null);
+    utterance.onerror = () => setSpeakingIndex(null);
+    setSpeakingIndex(index);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  const speechStatus: SpeechStatus | "error" = speech.error
+    ? "error"
+    : speech.status;
+  const speechStatusLabel: Record<SpeechStatus | "error", string> = {
+    ready: "Ready",
+    listening: "Listening",
+    processing: "Processing",
+    stopped: "Stopped",
+    error: "Error",
+  };
 
   return (
     <>
@@ -117,7 +194,10 @@ export function HelpAssistant() {
                 {messages.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setMessages([])}
+                    onClick={() => {
+                      stopSpeaking();
+                      setMessages([]);
+                    }}
                     className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-navy focus-visible:outline-none"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -149,6 +229,30 @@ export function HelpAssistant() {
                       ].join(" ")}
                     >
                       {m.text}
+                      {m.role === "bot" && (
+                        <button
+                          type="button"
+                          onClick={() => readAloud(i, m.text)}
+                          className="ml-2 inline-flex min-h-[28px] items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs font-medium text-muted hover:border-indigo hover:text-indigo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo"
+                          aria-label={
+                            speakingIndex === i
+                              ? "Stop reading this answer aloud"
+                              : "Read this answer aloud"
+                          }
+                        >
+                          {speakingIndex === i ? (
+                            <>
+                              <Square className="h-3 w-3" aria-hidden="true" />
+                              Stop
+                            </>
+                          ) : (
+                            <>
+                              <Speaker className="h-3 w-3" aria-hidden="true" />
+                              Read aloud
+                            </>
+                          )}
+                        </button>
+                      )}
                     </p>
                   </div>
                 ))}
@@ -174,29 +278,83 @@ export function HelpAssistant() {
               </div>
 
               {/* Input */}
-              <form
-                onSubmit={onSend}
-                className="flex items-center gap-2 border-t border-line bg-white p-3"
-              >
-                <label htmlFor="help-input" className="sr-only">
-                  Ask a question
-                </label>
-                <input
-                  id="help-input"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about this page…"
-                  className="min-h-[44px] w-full rounded-card border border-line bg-white px-3 py-2 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo"
-                />
-                <button
-                  type="submit"
-                  disabled={!input.trim()}
-                  aria-label="Send"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-card bg-primary-gradient text-white shadow-card transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo"
-                >
-                  <Send className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </form>
+              <div className="border-t border-line bg-white p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <label htmlFor="help-speech-language" className="text-xs font-medium text-muted">
+                    Voice language
+                  </label>
+                  <select
+                    id="help-speech-language"
+                    value={speechLanguage}
+                    onChange={(event) =>
+                      handleSpeechLanguageChange(event.target.value as SpeechLanguage)
+                    }
+                    className="min-h-[32px] rounded-card border border-line bg-white px-2 py-1 text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo"
+                    aria-label="Voice language"
+                  >
+                    <option value="en-US">English</option>
+                    <option value="es-ES">Spanish</option>
+                    <option value="hi-IN">Hindi</option>
+                  </select>
+                </div>
+
+                <form onSubmit={onSend} className="flex items-center gap-2">
+                  <label htmlFor="help-input" className="sr-only">
+                    Ask a question
+                  </label>
+                  <input
+                    id="help-input"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask about this page…"
+                    className="min-h-[44px] w-full rounded-card border border-line bg-white px-3 py-2 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (speech.status === "listening") stopSpeech();
+                      else speech.start();
+                    }}
+                    aria-label={
+                      speech.status === "listening"
+                        ? "Stop listening"
+                        : "Start voice input"
+                    }
+                    aria-pressed={speech.status === "listening"}
+                    className={[
+                      "flex h-11 w-11 shrink-0 items-center justify-center rounded-card border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo",
+                      speech.status === "listening"
+                        ? "border-danger/50 bg-[#F8E4E3] text-danger"
+                        : "border-line bg-white text-plum hover:border-indigo hover:text-indigo",
+                    ].join(" ")}
+                  >
+                    {speech.status === "listening" ? (
+                      <MicOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Mic className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!input.trim()}
+                    aria-label="Send"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-card bg-primary-gradient text-white shadow-card transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo"
+                  >
+                    <Send className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </form>
+
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted" role="status" aria-live="polite">
+                  <span className="font-medium text-ink">{speechStatusLabel[speechStatus]}</span>
+                  {speech.error ? (
+                    <span>{speech.error}</span>
+                  ) : !speech.supported ? (
+                    <span>Voice input is unavailable. You can type instead.</span>
+                  ) : (
+                    <span>Review the transcript before pressing Send.</span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
