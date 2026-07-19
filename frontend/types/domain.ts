@@ -64,7 +64,7 @@ export interface ExtractedField {
   /** 0..1 model confidence for the extracted value. */
   confidence: number;
   state: FieldState;
-  sourceBox: SourceBox;
+  sourceBox?: SourceBox | null;
   /** Optional evidence snippet the backend read the value from. */
   evidenceText?: string;
   /** True when the renter added this field by hand (extraction missed it). */
@@ -117,8 +117,8 @@ export interface RuleCitation {
 
 export interface RulesResponse {
   answer: string;
-  calculation: RuleCalculation;
-  citation: RuleCitation;
+  calculation: RuleCalculation | null;
+  citation: RuleCitation | null;
   /** True when the assistant safely declines (e.g. an eligibility question). */
   abstained: boolean;
   disclaimer: string;
@@ -155,11 +155,13 @@ export type PacketStatus =
   | "deleted";
 
 export interface PacketResponse {
-  packetId: string;
-  status: PacketStatus;
-  includedDocuments: DocumentType[];
-  confirmedFieldsOnly: boolean;
-  downloadUrl: string;
+  sessionId: string;
+  fields: ProfileField[];
+  includedDocuments: string[];
+  packetId?: string;
+  status?: PacketStatus;
+  confirmedFieldsOnly?: boolean;
+  downloadUrl?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -168,14 +170,21 @@ export interface PacketResponse {
 
 export interface SessionResponse {
   sessionId: string;
-  /** Unix ms expiry for the short-lived demo session. */
-  expiresAt: number;
+  expiresAt: number | string;
+  ttlSeconds: number;
 }
 
 export interface ProfileResponse {
-  householdSize: number;
+  sessionId: string;
+  confirmedFieldsOnly: boolean;
   /** Confirmed fields only — nothing unconfirmed reaches the profile. */
-  confirmedFields: ConfirmedProfileField[];
+  fields: ProfileField[];
+}
+
+export interface ProfileField {
+  name: string;
+  value: string | number;
+  state: FieldState;
 }
 
 export interface ConfirmedProfileField {

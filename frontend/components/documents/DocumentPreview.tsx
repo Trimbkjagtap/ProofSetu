@@ -72,7 +72,7 @@ export function DocumentPreview({
         .filter((field) => field.evidenceText)
         .map((field) => ({
           name: humanizeFieldName(field.name),
-          page: field.sourceBox.page,
+          page: field.sourceBox?.page ?? 1,
           snippet: field.evidenceText as string,
         })),
     [fields]

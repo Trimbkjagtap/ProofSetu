@@ -4,10 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Info, RefreshCw } from "lucide-react";
 import type { RulesResponse } from "@/types/domain";
-import { apiClient } from "@/lib/api/client";
+import { apiClient, IS_MOCK } from "@/lib/api/client";
 import { useApp } from "@/lib/state/AppContext";
 import { useAnnounce } from "@/lib/a11y/AnnouncerContext";
-import { buildCalculation, confirmedGrossPay } from "@/lib/calculation";
+import {
+  buildCalculation,
+  buildRulesQueryContext,
+  confirmedGrossPay,
+} from "@/lib/calculation";
 import { CalculationBreakdown } from "./CalculationBreakdown";
 import { PublishedLimitCard } from "./PublishedLimitCard";
 import { CitationCard } from "./CitationCard";
@@ -40,7 +44,14 @@ export function FitCheckView() {
     setError(null);
     followedCorrection.current = state.calculationStale;
     try {
-      const res = await apiClient.queryRules(OVERVIEW_QUESTION);
+      const sessionId = state.session?.sessionId;
+      if (!sessionId) throw new Error("Your session is not available. Please start again.");
+      const profile = IS_MOCK ? null : await apiClient.getProfile(sessionId);
+      const rulesFields = profile?.fields ?? confirmedFields;
+      const res = await apiClient.queryRules(
+        OVERVIEW_QUESTION,
+        buildRulesQueryContext(rulesFields, state.householdSize)
+      );
       setData(res);
       if (state.calculationStale) {
         dispatch({ type: "SET_CALCULATION_STALE", stale: false });
@@ -52,9 +63,7 @@ export function FitCheckView() {
     } finally {
       setLoading(false);
     }
-    // Run once on mount; state.calculationStale is read as a snapshot.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [announce, dispatch]);
+  }, [announce, confirmedFields, dispatch, state.calculationStale, state.householdSize, state.session?.sessionId]);
 
   useEffect(() => {
     void load();
@@ -78,7 +87,7 @@ export function FitCheckView() {
   // and Packet showing the same numbers.
   const monthlyIncome = confirmedGrossPay(confirmedFields);
   const calculation =
-    monthlyIncome === null
+    monthlyIncome === null || data.calculation === null
       ? null
       : buildCalculation(monthlyIncome, data.calculation.threshold);
 
@@ -105,7 +114,7 @@ export function FitCheckView() {
           <CalculationBreakdown calculation={calculation} />
           <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
             <PublishedLimitCard calculation={calculation} />
-            <CitationCard citation={data.citation} />
+            {data.citation && <CitationCard citation={data.citation} />}
           </div>
         </>
       ) : (
@@ -123,7 +132,7 @@ export function FitCheckView() {
               to see the calculation.
             </p>
           </div>
-          <CitationCard citation={data.citation} />
+          {data.citation && <CitationCard citation={data.citation} />}
         </div>
       )}
 

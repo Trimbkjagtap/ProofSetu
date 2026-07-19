@@ -11,16 +11,14 @@ export const DOCUMENT_LIMITS = {
 
 export const MAX_MB = Math.round(DOCUMENT_LIMITS.maxBytes / (1024 * 1024));
 
-export const ACCEPTED_EXTENSIONS = ["pdf", "doc", "docx", "jpg", "jpeg", "png"];
+export const ACCEPTED_EXTENSIONS = ["pdf", "jpg", "jpeg", "png"];
 
 export const ACCEPTED_MIME = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "image/jpeg",
   "image/png",
 ];
 
 /** The value for a file input's `accept` attribute. */
 export const ACCEPT_ATTR =
-  ".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png";
+  ".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png";

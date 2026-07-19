@@ -13,6 +13,9 @@ interface SourceBoxOverlayProps {
   /** Name of the currently highlighted field (hover/focus), if any. */
   activeName: string | null;
   onActivate: (name: string | null) => void;
+  /** Coordinate size of the displayed page image. PDF boxes may use a larger DPI. */
+  pageWidth?: number;
+  pageHeight?: number;
 }
 
 function pct(value: number, total: number): string {
@@ -28,11 +31,24 @@ export function SourceBoxOverlay({
   fields,
   activeName,
   onActivate,
+  pageWidth,
+  pageHeight,
 }: SourceBoxOverlayProps) {
+  const boxes = fields.flatMap((field) =>
+    field.sourceBox ? [field.sourceBox] : []
+  );
+  // When the backend supplies PDF coordinates at a larger DPI, use the observed
+  // coordinate extent instead of placing those boxes beyond the displayed page.
+  const resolvedPageWidth =
+    pageWidth ?? Math.max(PAGE_WIDTH, ...boxes.map((box) => box.x + box.width));
+  const resolvedPageHeight =
+    pageHeight ?? Math.max(PAGE_HEIGHT, ...boxes.map((box) => box.y + box.height));
+
   return (
     <>
       {fields.map((field) => {
-        const { sourceBox: box } = field;
+        const box = field.sourceBox;
+        if (!box) return null;
         const isActive = activeName === field.name;
         return (
           <button
@@ -44,10 +60,10 @@ export function SourceBoxOverlay({
             onBlur={() => onActivate(null)}
             aria-label={`Evidence for ${humanizeFieldName(field.name)}: ${formatFieldValue(field)}`}
             style={{
-              left: pct(box.x, PAGE_WIDTH),
-              top: pct(box.y, PAGE_HEIGHT),
-              width: pct(box.width, PAGE_WIDTH),
-              height: pct(box.height, PAGE_HEIGHT),
+              left: pct(box.x, resolvedPageWidth),
+              top: pct(box.y, resolvedPageHeight),
+              width: pct(box.width, resolvedPageWidth),
+              height: pct(box.height, resolvedPageHeight),
             }}
             className={[
               "absolute flex items-center overflow-hidden rounded-[3px] px-1 text-left text-[0.7rem] leading-none transition-colors focus-visible:outline-none",

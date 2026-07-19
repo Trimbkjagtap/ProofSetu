@@ -19,10 +19,16 @@ async function request<T>(
   init?: RequestInit
 ): Promise<T> {
   let res: Response;
+  const headers = new Headers(init?.headers);
+  const isFormData =
+    typeof FormData !== "undefined" && init?.body instanceof FormData;
+  if (!isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
   try {
     res = await fetch(`${BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
       ...init,
+      headers,
     });
   } catch (cause) {
     throw new ApiError(
@@ -31,6 +37,10 @@ async function request<T>(
   }
   if (!res.ok) {
     throw new ApiError(`Request to ${path} failed.`, res.status);
+  }
+  if (res.status === 204) return undefined as T;
+  if (!res.headers.get("content-type")?.includes("application/json")) {
+    return undefined as T;
   }
   return (await res.json()) as T;
 }
@@ -51,46 +61,51 @@ export const liveClient: ProofSetuApi = {
 
   uploadDocument(
     file: File,
-    requestedType: RequestedType = "auto"
+    sessionId: string,
+    _requestedType: RequestedType = "auto"
   ): Promise<ExtractionResponse> {
     const body = new FormData();
     body.append("file", file);
-    body.append("document_type", requestedType);
-    // Let the browser set the multipart boundary; drop the JSON header.
+    body.append("session_id", sessionId);
     return request<ExtractionResponse>("/documents", {
       method: "POST",
       body,
-      headers: {},
     });
   },
 
   updateDocumentField(
     documentId: string,
     field: FieldUpdate
-  ): Promise<ExtractionResponse> {
-    return request<ExtractionResponse>(`/documents/${documentId}/fields`, {
+  ): Promise<ExtractionResponse | null> {
+    const action = field.state === "corrected" ? "correct" : "confirm";
+    return request<ExtractionResponse | null>(`/documents/${documentId}/fields`, {
       method: "PATCH",
-      body: JSON.stringify(field),
+      body: JSON.stringify({ name: field.name, action, value: field.value }),
     });
   },
 
-  getProfile(): Promise<ProfileResponse> {
-    return request<ProfileResponse>("/profile");
+  getProfile(sessionId: string): Promise<ProfileResponse> {
+    return request<ProfileResponse>(`/profile?session_id=${encodeURIComponent(sessionId)}`);
   },
 
-  queryRules(question: string): Promise<RulesResponse> {
+  queryRules(question: string, context): Promise<RulesResponse> {
     return request<RulesResponse>("/rules/query", {
       method: "POST",
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, ...context }),
     });
   },
 
-  getChecklist(): Promise<ChecklistResponse> {
-    return request<ChecklistResponse>("/checklist?program=lihtc");
+  getChecklist(sessionId: string): Promise<ChecklistResponse> {
+    return request<ChecklistResponse>(
+      `/checklist?program=lihtc&session_id=${encodeURIComponent(sessionId)}`
+    );
   },
 
-  createPacket(): Promise<PacketResponse> {
-    return request<PacketResponse>("/packet", { method: "POST" });
+  createPacket(sessionId, fields, includedDocuments): Promise<PacketResponse> {
+    return request<PacketResponse>("/packet", {
+      method: "POST",
+      body: JSON.stringify({ sessionId, fields, includedDocuments }),
+    });
   },
 
   async downloadPacket(packetId: string) {

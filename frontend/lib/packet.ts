@@ -5,8 +5,8 @@ export interface MockPacketInput {
   renterName: string;
   householdSize: number;
   confirmedFields: ConfirmedProfileField[];
-  calculation: RuleCalculation;
-  citation: RuleCitation;
+  calculation: RuleCalculation | null;
+  citation: RuleCitation | null;
   includedDocuments: string[];
   attention: { label: string; status: string }[];
 }
@@ -48,21 +48,25 @@ export function buildMockPacketText(input: MockPacketInput): string {
     }
   }
   rows.push("");
-  rows.push("INCOME AND THE PUBLISHED LIMIT");
-  rows.push("-".repeat(60));
-  rows.push(`Confirmed monthly income: ${formatCurrency(calculation.confirmedValue)}`);
-  rows.push(`Calculation: ${calculation.formula}`);
-  rows.push(`Annualized income: ${formatCurrency(calculation.annualizedIncome)}`);
-  rows.push(`Published 2026 limit: ${formatCurrency(calculation.threshold)}`);
-  rows.push(`Difference: ${formatCurrency(calculation.difference)}`);
-  rows.push("This comparison does not determine eligibility.");
-  rows.push("");
-  rows.push("CITATION");
-  rows.push("-".repeat(60));
-  rows.push(`Source: ${citation.source}`);
-  rows.push(`Section: ${citation.section}`);
-  rows.push(`Rule year: ${citation.ruleYear}`);
-  rows.push(`Effective date: ${formatDate(citation.effectiveDate)}`);
+  if (calculation) {
+    rows.push("INCOME AND THE PUBLISHED LIMIT");
+    rows.push("-".repeat(60));
+    rows.push(`Confirmed monthly income: ${formatCurrency(calculation.confirmedValue)}`);
+    rows.push(`Calculation: ${calculation.formula}`);
+    rows.push(`Annualized income: ${formatCurrency(calculation.annualizedIncome)}`);
+    rows.push(`Published 2026 limit: ${formatCurrency(calculation.threshold)}`);
+    rows.push(`Difference: ${formatCurrency(calculation.difference)}`);
+    rows.push("This comparison does not determine eligibility.");
+    rows.push("");
+  }
+  if (citation) {
+    rows.push("CITATION");
+    rows.push("-".repeat(60));
+    rows.push(`Source: ${citation.source}`);
+    rows.push(`Section: ${citation.section}`);
+    rows.push(`Rule year: ${citation.ruleYear}`);
+    rows.push(`Effective date: ${formatDate(citation.effectiveDate)}`);
+  }
   rows.push("");
   rows.push("INCLUDED DOCUMENTS");
   rows.push("-".repeat(60));
