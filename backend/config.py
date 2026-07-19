@@ -28,7 +28,7 @@ class Settings:
     # Vercel deployment so the frontend works without hard-coding its exact URL.
     CORS_ORIGIN_REGEX: str = os.getenv("CORS_ORIGIN_REGEX", r"https://.*\.vercel\.app")
 
-    MAX_UPLOAD_MB: int = int(os.getenv("MAX_UPLOAD_MB", "10"))
+    MAX_UPLOAD_MB: int = int(os.getenv("MAX_UPLOAD_MB", "15"))  # matches the frontend cap
 
 
 settings = Settings()
