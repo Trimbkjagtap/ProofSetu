@@ -9,8 +9,8 @@ export default function FitCheckPage() {
     <div className="page-enter">
       <PageHeader
         eyebrow="Step 3 of 5"
-        title="See how the numbers were calculated"
-        description="Here is a clear comparison using the information you confirmed."
+        title="Here’s how the numbers were worked out"
+        description="A clear comparison using the information you confirmed."
       />
       <FitCheckView />
     </div>

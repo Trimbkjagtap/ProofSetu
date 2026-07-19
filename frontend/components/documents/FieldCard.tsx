@@ -164,6 +164,14 @@ export function FieldCard({
           <div className="mt-1">
             <ConfidenceIndicator confidence={field.confidence} />
           </div>
+          {field.evidenceText && (
+            <p className="mt-1 text-sm text-muted">
+              <span className="font-medium">
+                {field.manual ? "Entered manually" : "Read from"}:
+              </span>{" "}
+              {field.manual ? "" : `“${field.evidenceText}”`}
+            </p>
+          )}
 
           <div className="mt-3 flex flex-wrap gap-2">
             {!isSettled && (

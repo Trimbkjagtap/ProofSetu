@@ -1,8 +1,9 @@
 import type { Config } from "tailwindcss";
 
 /**
- * ProofSetu design tokens — warm, sophisticated public-service palette.
- * Red (`danger`) is reserved strictly for errors and expired documents.
+ * ProofSetu design tokens — warm editorial palette (plum / berry / clay /
+ * apricot / gold). Legacy names (navy, forest, indigo, emerald, teal, citation,
+ * sage, softblue, ivory) are remapped so existing components restyle in place.
  */
 const config: Config = {
   content: [
@@ -13,44 +14,77 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        forest: {
-          DEFAULT: "#123F35", // deep forest green — primary
-          dark: "#0E332B", // darker evergreen — hover / headings
-        },
-        emerald: "#1F6B55", // emerald green — gradient partner / accents
-        sage: "#DCE9E1", // soft sage — subtle fills
-        cream: "#FAF7F0", // warm cream
-        ivory: "#FAF7F0", // alias kept for existing usage
-        paper: "#FFFFFF", // white surfaces
-        terracotta: "#C65D3A", // muted accent (non-status)
-        citation: "#315F7D", // citation blue — references / evidence
-        ink: "#16241E", // main text
-        muted: "#55635B", // secondary text
-        line: "#CBDBD0", // thin sage border
-        danger: "#B42318", // error / expired ONLY
-        warning: "#9A6700", // warning / expiring
+        plum: { DEFAULT: "#292038", dark: "#1E1729" },
+        berry: "#623B55",
+        clay: "#A6534F",
+        apricot: "#D77A57",
+        gold: "#E7B66B",
+        cream: "#FFF9F2",
+        blush: "#F8EEE9",
+        // Legacy aliases → new palette
+        navy: { DEFAULT: "#292038", dark: "#1E1729" },
+        forest: { DEFAULT: "#292038", dark: "#1E1729" },
+        indigo: "#A6534F", // → clay accent
+        emerald: "#A6534F", // → clay
+        teal: "#2E7D6E", // → muted teal (Confirmed)
+        citation: "#623B55", // → muted plum (citations)
+        sage: "#F8EEE9", // → blush fill
+        softblue: "#F8EEE9",
+        ivory: "#FFF9F2",
+        paper: "#FFFFFF",
+        ink: "#27232B",
+        muted: "#6F6873",
+        line: "#DDD1CB",
+        success: "#2E7D6E", // muted teal
+        danger: "#BE3B39", // red (expired / errors)
+        warning: "#D97706", // amber (corrected / attention)
       },
       backgroundImage: {
         "app-gradient":
-          "linear-gradient(135deg, #FAF7F0 0%, #F2F7F3 55%, #E7F1EB 100%)",
+          "linear-gradient(145deg, #FFFDF9 0%, #FFF8F2 52%, #F5EFF4 100%)",
         "primary-gradient":
-          "linear-gradient(135deg, #123F35 0%, #1F6B55 100%)",
-        "panel-gradient": "linear-gradient(135deg, #FFFFFF 0%, #EEF6F1 100%)",
+          "linear-gradient(118deg, #292038 0%, #623B55 48%, #D77A57 100%)",
+        "panel-gradient":
+          "linear-gradient(135deg, #FFFFFF 0%, #FFF7F2 60%, #F8EEE9 100%)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
       },
       borderRadius: {
-        card: "18px",
+        card: "16px",
       },
       boxShadow: {
-        // Soft, realistic elevation in the forest-green tint.
-        card: "0 1px 2px rgba(18, 63, 53, 0.04), 0 6px 16px rgba(18, 63, 53, 0.06)",
-        raised: "0 12px 30px rgba(18, 63, 53, 0.13)",
+        card: "0 1px 2px rgba(41, 32, 56, 0.04), 0 8px 20px rgba(41, 32, 56, 0.06)",
+        raised: "0 14px 34px rgba(41, 32, 56, 0.14)",
+        clay: "0 10px 26px rgba(166, 83, 79, 0.30)",
+      },
+      keyframes: {
+        "tab-slide": {
+          from: { opacity: "0.5", transform: "translateX(14px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-in-right": {
+          from: { transform: "translateX(100%)" },
+          to: { transform: "translateX(0)" },
+        },
+        wave: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "20%": { transform: "rotate(-12deg)" },
+          "40%": { transform: "rotate(10deg)" },
+          "60%": { transform: "rotate(-6deg)" },
+          "80%": { transform: "rotate(4deg)" },
+        },
+      },
+      animation: {
+        "tab-slide": "tab-slide 200ms ease-out",
+        "slide-in-right": "slide-in-right 220ms ease-out",
+        wave: "wave 900ms ease-in-out 1",
       },
       maxWidth: {
         prose: "68ch",
+        shell: "1200px",
+        title: "760px",
       },
     },
   },

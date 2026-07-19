@@ -4,6 +4,7 @@ import type {
   FieldUpdate,
   PacketResponse,
   ProfileResponse,
+  RequestedType,
   RulesResponse,
   SessionResponse,
 } from "@/types/domain";
@@ -16,7 +17,10 @@ import type {
 export interface ProofSetuApi {
   createSession(): Promise<SessionResponse>;
   deleteSession(sessionId: string): Promise<{ deleted: true }>;
-  uploadDocument(file: File): Promise<ExtractionResponse>;
+  uploadDocument(
+    file: File,
+    requestedType?: RequestedType
+  ): Promise<ExtractionResponse>;
   updateDocumentField(
     documentId: string,
     field: FieldUpdate

@@ -10,6 +10,7 @@ interface InfoDialogProps {
   title: string;
   children: ReactNode;
   closeLabel?: string;
+  wide?: boolean;
   onClose: () => void;
 }
 
@@ -22,6 +23,7 @@ export function InfoDialog({
   title,
   children,
   closeLabel = "Close",
+  wide = false,
   onClose,
 }: InfoDialogProps) {
   const containerRef = useFocusTrap<HTMLDivElement>(open, onClose);
@@ -40,7 +42,10 @@ export function InfoDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 w-full max-w-lg rounded-card border border-line bg-paper p-6 shadow-raised"
+        className={[
+          "relative z-10 w-full rounded-card border border-line bg-paper p-6 shadow-raised",
+          wide ? "max-w-[700px]" : "max-w-lg",
+        ].join(" ")}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">

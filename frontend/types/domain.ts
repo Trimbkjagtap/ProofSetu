@@ -16,7 +16,22 @@ export type DocumentType =
   | "pay_stub"
   | "benefit_letter"
   | "bank_statement"
-  | "government_id";
+  | "government_id"
+  | "other";
+
+/** What the user asked us to treat the document as ("auto" = let us identify). */
+export type RequestedType = DocumentType | "auto";
+
+/** How a document entered the app. */
+export type DocumentSource = "upload" | "scan";
+
+/** Front-end review status for the document list (derived, not a contract field). */
+export type ReviewStatus =
+  | "waiting"
+  | "reading"
+  | "ready"
+  | "needs_attention"
+  | "failed";
 
 /** Frozen document status vocabulary. */
 export type DocumentStatus =
@@ -50,6 +65,10 @@ export interface ExtractedField {
   confidence: number;
   state: FieldState;
   sourceBox: SourceBox;
+  /** Optional evidence snippet the backend read the value from. */
+  evidenceText?: string;
+  /** True when the renter added this field by hand (extraction missed it). */
+  manual?: boolean;
 }
 
 export interface ExtractionResponse {
@@ -57,6 +76,24 @@ export interface ExtractionResponse {
   documentType: DocumentType;
   status: DocumentStatus;
   fields: ExtractedField[];
+  /** Optional non-fatal warnings from extraction. */
+  warnings?: string[];
+  /** Optional error message when extraction failed. */
+  error?: string;
+}
+
+/**
+ * A document in front-end state: the extraction response plus safe metadata.
+ * Raw images are never stored here — only the file name/size and confirmed data.
+ */
+export interface DocumentRecord extends ExtractionResponse {
+  /** Backend document ID when live extraction returns one. */
+  backendDocumentId?: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  source: DocumentSource;
+  requestedType: RequestedType;
 }
 
 /* ------------------------------------------------------------------ */

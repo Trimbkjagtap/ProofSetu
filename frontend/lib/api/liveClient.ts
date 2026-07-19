@@ -4,6 +4,7 @@ import type {
   FieldUpdate,
   PacketResponse,
   ProfileResponse,
+  RequestedType,
   RulesResponse,
   SessionResponse,
 } from "@/types/domain";
@@ -48,9 +49,13 @@ export const liveClient: ProofSetuApi = {
     return { deleted: true as const };
   },
 
-  uploadDocument(file: File): Promise<ExtractionResponse> {
+  uploadDocument(
+    file: File,
+    requestedType: RequestedType = "auto"
+  ): Promise<ExtractionResponse> {
     const body = new FormData();
     body.append("file", file);
+    body.append("document_type", requestedType);
     // Let the browser set the multipart boundary; drop the JSON header.
     return request<ExtractionResponse>("/documents", {
       method: "POST",

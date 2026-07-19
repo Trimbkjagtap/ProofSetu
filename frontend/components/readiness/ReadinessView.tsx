@@ -82,45 +82,39 @@ export function ReadinessView() {
 
   return (
     <div className="space-y-8">
-      {/* Non-numeric progress summary (word-based, no score/percentage). */}
+      {/* Compact status summary. */}
       <section
         aria-labelledby="summary-heading"
-        className="rounded-card border border-line bg-paper p-6 shadow-card"
+        className="rounded-card border border-line bg-panel-gradient p-4 shadow-card"
       >
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-forest" aria-hidden="true" />
-          <h2 id="summary-heading" className="text-lg">
-            Where your documents stand
-          </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-indigo" aria-hidden="true" />
+            <h2 id="summary-heading" className="text-base font-semibold text-navy">
+              {attentionCount > 0
+                ? `${attentionCount} document${attentionCount === 1 ? "" : "s"} need attention`
+                : "Everything on the list is present"}
+            </h2>
+          </div>
+          <ul className="flex flex-wrap gap-2" aria-label="Document status summary">
+            {summaryCounts.map(({ status, count }) => (
+              <li key={status} className="flex items-center gap-1.5">
+                <StatusBadge kind="checklist" status={status} />
+                <span className="text-sm text-ink">{count}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <p className="mt-2 text-ink">
-          {attentionCount > 0
-            ? `${attentionCount} document${attentionCount === 1 ? "" : "s"} still ${
-                attentionCount === 1 ? "needs" : "need"
-              } attention.`
-            : "Everything on the list is present."}
-        </p>
-        <ul className="mt-3 flex flex-wrap gap-2" aria-label="Document status summary">
-          {summaryCounts.map(({ status, count }) => (
-            <li key={status} className="flex items-center gap-2">
-              <StatusBadge kind="checklist" status={status} />
-              <span className="text-sm text-ink">
-                {count} document{count === 1 ? "" : "s"}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 flex items-start gap-2 rounded-card border border-line bg-ivory p-3 text-sm text-muted">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-forest" aria-hidden="true" />
+        <p className="mt-3 flex items-start gap-2 text-sm text-muted">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-indigo" aria-hidden="true" />
           <span>
             This is a document checklist, <strong>not an eligibility score</strong>.
-            It shows which documents are ready — it does not decide whether you
-            qualify. A qualified housing professional makes that decision.
+            A housing professional makes the final decision.
           </span>
         </p>
       </section>
 
-      {/* Groups, attention-needed first. */}
+      {/* Groups, attention-needed first, in a responsive two-column grid. */}
       {GROUP_ORDER.map(({ status, heading }) => {
         const groupItems = grouped.get(status);
         if (!groupItems || groupItems.length === 0) return null;
@@ -132,7 +126,7 @@ export function ReadinessView() {
                 ({groupItems.length})
               </span>
             </h2>
-            <ul className="space-y-3">
+            <ul className="grid gap-3 sm:grid-cols-2">
               {groupItems.map((item) => (
                 <ChecklistItemRow key={item.documentType} item={item} />
               ))}

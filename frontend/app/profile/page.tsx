@@ -9,8 +9,8 @@ export default function ProfilePage() {
     <div className="page-enter">
       <PageHeader
         eyebrow="Step 2 of 5"
-        title="Tell us about your household"
-        description="Add your documents and confirm the details we find. You’re always in control of what’s used."
+        title="Add and check your documents"
+        description="We’ll show what we found so you can confirm or change each detail."
       />
       <ProfileWorkspace />
     </div>
