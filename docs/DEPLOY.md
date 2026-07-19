@@ -31,11 +31,13 @@ Add the env vars listed in `render.yaml`.
 Member 1 deploys the Next.js app from `develop` on Vercel and sets
 `NEXT_PUBLIC_API_BASE_URL` to the Render backend URL above.
 
-## Wire CORS (after the frontend URL exists)
+## Wire CORS
 
-The backend must allow the frontend origin. In Render → the service → **Environment**,
-set `CORS_ORIGINS` to the exact Vercel URL (e.g. `https://proofsetu.vercel.app`) and
-redeploy. Until then it defaults to `localhost:3000` for local dev.
+The backend allows any `https://*.vercel.app` origin **by default** (via
+`CORS_ORIGIN_REGEX`), plus `localhost:3000` for local dev — so a Vercel frontend
+works with **no CORS change needed**. Only if the frontend uses a **custom domain**
+do you need to set `CORS_ORIGINS` (Render → service → **Environment**) to that exact
+origin and redeploy.
 
 ## Environment variables (names only — never commit secrets)
 
