@@ -36,5 +36,17 @@ def get_profile(session_id: Optional[str] = Query(None)) -> dict:
     return {
         "sessionId": session_id,
         "confirmedFieldsOnly": True,
-        "fields": fields,
+        # household size is renter-entered on the frontend, not stored server-side.
+        "householdSize": 0,
+        "fields": fields,  # kept for backward compatibility
+        # `confirmedFields` matches the frontend's ProfileResponse shape.
+        "confirmedFields": [
+            {
+                "documentId": f.get("documentId", ""),
+                "name": f.get("name"),
+                "value": f.get("value"),
+                "state": f.get("state"),
+            }
+            for f in fields
+        ],
     }

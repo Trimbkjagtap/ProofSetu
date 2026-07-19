@@ -37,6 +37,15 @@ def test_profile_returns_confirmed_fields_only():
     assert all(f.get("state") in ("confirmed", "corrected") for f in body["fields"])
 
 
+def test_profile_matches_frontend_shape():
+    body = client.get("/profile").json()
+    # Frontend ProfileResponse: { householdSize, confirmedFields:[{documentId,name,value,state}] }
+    assert "householdSize" in body
+    assert "confirmedFields" in body
+    for f in body["confirmedFields"]:
+        assert set(f.keys()) == {"documentId", "name", "value", "state"}
+
+
 def test_profile_reflects_stored_session_profile():
     session_id = client.post("/session").json()["sessionId"]
     profile_store.set_profile(
