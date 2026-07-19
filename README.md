@@ -56,8 +56,24 @@ _Per-area setup lives in each member's handoff under [docs/handoffs/](docs/hando
 Copy `.env.example` → `.env` and fill values locally (never commit `.env`).
 
 ## Deployment URLs
+- Backend (Render, from `develop`): **https://proofsetu.onrender.com** — health: [`/health`](https://proofsetu.onrender.com/health), API docs: [`/docs`](https://proofsetu.onrender.com/docs)
 - Frontend (Vercel): _TBD_
-- Backend health (Render): _TBD_ (`/health`)
+- _Free tier sleeps after ~15 min idle — open `/health` 2–3 min before a demo._
+
+## Backend API (live & tested)
+FastAPI service, **67 tests passing** (+ 22 rules tests), CI green on every PR to `develop`.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/health` | Liveness check |
+| POST · DELETE | `/session` · `/session/{id}` | Consent session + delete-everything |
+| GET | `/checklist?program=lihtc` | Deterministic present/missing/expiring/expired |
+| POST | `/rules/query` | Grounded cited answer, or safe refusal |
+| POST · GET | `/packet` · `/packet/{id}[/pdf,/html]` | Renter packet + PDF export |
+| GET | `/features` | Feature registry (fields, purpose, retention) |
+| GET | `/profile` | Confirmed fields only |
+
+Safety is enforced globally (output guard, input guard, eligibility refusal). See [docs/handoffs/member-4.md](docs/handoffs/member-4.md) and [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Known limitations & roadmap
 Prototype built for a single frozen demo case. No multi-program/metro, no property

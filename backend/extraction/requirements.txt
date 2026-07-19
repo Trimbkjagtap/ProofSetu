@@ -1,0 +1,26 @@
+# Member 2 (extraction) dependencies.
+# Kept separate to avoid conflicts on a shared backend/requirements.txt.
+# Member 4: fold these into backend/requirements.txt so CI installs them
+# (see docs/handoffs/member-2.md).
+
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9   # required by FastAPI for file uploads
+pydantic>=2.6
+
+# --- test deps ---
+pytest>=8.0
+httpx>=0.27               # FastAPI TestClient
+
+# --- real OCR (P1) + synthetic demo generator; fixture path works without them ---
+# Requires the Tesseract ENGINE BINARY on PATH (or set TESSERACT_CMD).
+#   Windows: choco install tesseract   (admin)  |  Debian: apt-get install tesseract-ocr
+pytesseract>=0.3.10
+Pillow>=10.0
+
+# --- OpenAI vision extraction (VISION_PROVIDER=openai) + PDF support ---
+# Cloud-friendly: HTTPS API + PyMuPDF bundles its own binaries (no poppler /
+# tesseract system install), so this works on Render. Opt-in; fixture stays the
+# default fallback. Needs OPENAI_API_KEY (secret; set in the deploy dashboard).
+openai>=1.40
+pymupdf>=1.24
